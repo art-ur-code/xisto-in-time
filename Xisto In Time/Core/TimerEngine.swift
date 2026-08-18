@@ -14,6 +14,7 @@ struct FinishedSession {
     let interrupted: Bool
     let kind: SessionKind
     let task: TaskItem?
+    let note: String?
 }
 
 @Observable
@@ -24,6 +25,7 @@ final class TimerEngine {
     private(set) var targetReached = false
     private(set) var currentKind: SessionKind = .work
     private(set) var currentTask: TaskItem?
+    private(set) var currentNote: String = ""
     var onTargetReached: (() -> Void)?
 
     private var startedAt: Date?
@@ -57,6 +59,7 @@ final class TimerEngine {
         self.targetDuration = targetDuration
         currentKind = kind
         currentTask = task
+        currentNote = ""
         targetReached = false
         pausedDuration = 0
         sleepStartedAt = nil
@@ -71,6 +74,10 @@ final class TimerEngine {
     func snoozeTarget() {
         targetReached = false
         targetDuration = nil
+    }
+
+    func updateNote(_ text: String) {
+        currentNote = text
     }
 
     /// Discards a stretch of elapsed time (e.g. idle time) without stopping the session.
@@ -109,7 +116,14 @@ final class TimerEngine {
         guard isRunning, let startedAt else { return nil }
         updateElapsed()
         let endedAt = overrideEndedAt ?? Date()
-        let finished = FinishedSession(startedAt: startedAt, endedAt: endedAt, interrupted: interrupted, kind: currentKind, task: currentTask)
+        let finished = FinishedSession(
+            startedAt: startedAt,
+            endedAt: endedAt,
+            interrupted: interrupted,
+            kind: currentKind,
+            task: currentTask,
+            note: currentNote.isEmpty ? nil : currentNote
+        )
         ticker?.invalidate()
         ticker = nil
         isRunning = false
@@ -118,6 +132,7 @@ final class TimerEngine {
         targetReached = false
         targetDuration = nil
         currentTask = nil
+        currentNote = ""
         elapsed = 0
         return finished
     }

@@ -55,10 +55,15 @@ private struct TaskDetailByIDView: View {
 
 private struct SessionEditorByIDView: View {
     let id: PersistentIdentifier
-    @Environment(\.modelContext) private var modelContext
+    @Query private var sessions: [Session]
+
+    init(id: PersistentIdentifier) {
+        self.id = id
+        _sessions = Query(filter: #Predicate<Session> { $0.persistentModelID == id })
+    }
 
     var body: some View {
-        if let session = modelContext.model(for: id) as? Session {
+        if let session = sessions.first {
             SessionEditorView(session: session)
         } else {
             Text("Sessão não encontrada")

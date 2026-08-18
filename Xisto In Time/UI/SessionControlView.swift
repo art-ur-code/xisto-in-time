@@ -29,7 +29,6 @@ struct SessionControlView: View {
 
     @State private var selectedProject: Project?
     @State private var selectedTask: TaskItem?
-    @State private var lastFinishedSession: Session?
     @State private var mode: TimerMode = .free
     @State private var pomodoroWorkOverride: TimeInterval?
 
@@ -112,12 +111,16 @@ struct SessionControlView: View {
             .tint(timerEngine.isRunning ? .red : accentColor)
             .controlSize(.large)
 
-            if let lastFinishedSession {
-                TextField("Nota (opcional)", text: Binding(
-                    get: { lastFinishedSession.note ?? "" },
-                    set: { lastFinishedSession.note = $0.isEmpty ? nil : $0 }
+            if timerEngine.isRunning {
+                TextEditor(text: Binding(
+                    get: { timerEngine.currentNote },
+                    set: { timerEngine.updateNote($0) }
                 ))
-                .textFieldStyle(.roundedBorder)
+                .font(.callout)
+                .frame(height: 70)
+                .scrollContentBackground(.hidden)
+                .padding(6)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
             }
         }
         .frame(maxWidth: 420, alignment: .leading)
@@ -206,7 +209,6 @@ struct SessionControlView: View {
     }
 
     private func startCurrentPhase() {
-        lastFinishedSession = nil
         if mode == .pomodoro {
             pomodoro.startWork(task: selectedTask, workDuration: pomodoroWorkOverride)
             pomodoroWorkOverride = nil
@@ -219,7 +221,7 @@ struct SessionControlView: View {
         if mode == .pomodoro {
             pomodoro.cancel()
         } else if let finished = timerEngine.stop() {
-            lastFinishedSession = SessionStore.recordFinishedSession(finished, in: modelContext)
+            SessionStore.recordFinishedSession(finished, in: modelContext)
         }
     }
 }

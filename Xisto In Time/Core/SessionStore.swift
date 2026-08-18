@@ -15,6 +15,7 @@ enum SessionStore {
             endedAt: finished.endedAt,
             task: finished.task,
             kind: finished.kind,
+            note: finished.note,
             interrupted: finished.interrupted
         )
         context.insert(session)

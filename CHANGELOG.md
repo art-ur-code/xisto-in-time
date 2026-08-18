@@ -7,6 +7,18 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.0.2] - 2026-08-18
+
+### Corrigido
+
+- O campo de nota da sessão passou a aparecer assim que a sessão começa
+  (popover e janela principal), em vez de só depois de parar — a nota é
+  escrita ao longo da sessão e fica guardada quando esta termina, seja qual
+  for o caminho (Parar, Pomodoro ou idle).
+- Corrigido um crash ao carregar em "Apagar sessão": a vista de edição por
+  ID usava `modelContext.model(for:)`, que devolvia uma instância inválida
+  da sessão já apagada; passou a usar uma `@Query` reactiva.
+
 ## [1.0.1] - 2026-08-18
 
 ### Corrigido
