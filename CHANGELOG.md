@@ -7,6 +7,15 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.3.0] - 2026-08-18
+
+### Adicionado
+
+- Detalhe da tarefa: cards de "Hoje" e "Esta semana", iguais aos do
+  detalhe do projecto, e um botão "Editar" (título e projecto) na
+  toolbar, através de um novo `TaskFormSheet` partilhado com a criação de
+  tarefas em `TasksBrowserView`.
+
 ## [1.2.0] - 2026-08-18
 
 ### Adicionado

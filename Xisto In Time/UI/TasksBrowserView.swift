@@ -73,41 +73,14 @@ struct TasksBrowserView: View {
             }
         }
         .sheet(isPresented: $showingNewTaskSheet) {
-            NavigationStack {
-                Form {
-                    TextField("Título", text: $newTaskTitle)
-                    Picker("Projecto", selection: $newTaskProject) {
-                        ForEach(projects) { project in
-                            projectLabel(project).tag(Project?.some(project))
-                        }
-                    }
-                }
-                .formStyle(.grouped)
-                .navigationTitle("Nova tarefa")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancelar") { showingNewTaskSheet = false }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Criar") {
-                            let trimmed = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !trimmed.isEmpty, let newTaskProject else { return }
-                            modelContext.insert(TaskItem(title: trimmed, project: newTaskProject))
-                            showingNewTaskSheet = false
-                        }
-                        .disabled(newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || newTaskProject == nil)
-                    }
-                }
+            TaskFormSheet(title: "Nova tarefa", taskTitle: $newTaskTitle, project: $newTaskProject, projects: projects) {
+                let trimmed = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty, let newTaskProject else { return }
+                modelContext.insert(TaskItem(title: trimmed, project: newTaskProject))
+                showingNewTaskSheet = false
+            } onCancel: {
+                showingNewTaskSheet = false
             }
-            .frame(width: 360, height: 220)
-        }
-    }
-
-    private func projectLabel(_ project: Project) -> some View {
-        Label {
-            Text(project.name)
-        } icon: {
-            Circle().fill(project.color).frame(width: 10, height: 10)
         }
     }
 }
