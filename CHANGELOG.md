@@ -7,6 +7,13 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.3.1] - 2026-08-19
+
+### Corrigido
+
+- Nome da tarefa nas linhas de sessão limitado a uma linha (com reticências),
+  em vez de poder esticar a linha em altura quando o nome é longo.
+
 ## [1.3.0] - 2026-08-18
 
 ### Adicionado

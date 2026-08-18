@@ -33,6 +33,8 @@ struct SessionRow: View {
                     if showsTask {
                         Text(session.task?.title ?? "Sem atribuição")
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                 }
                 if notePreviewSize != .icon, let note = session.note, !note.isEmpty {
