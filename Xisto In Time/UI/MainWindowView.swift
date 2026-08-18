@@ -1,0 +1,177 @@
+//
+//  MainWindowView.swift
+//  Xisto In Time
+//
+//  Created by Artur Tavares on 18/08/2026.
+//
+
+import AppKit
+import SwiftData
+import SwiftUI
+
+/// Navigation values for `@Model` types themselves: `@Model`'s synthesized
+/// `Hashable` conformance is MainActor-isolated, which `navigationDestination`
+/// can't use directly. Route by `PersistentIdentifier` instead (a plain,
+/// non-isolated `Hashable` struct) and re-fetch the model at the destination.
+struct ProjectRoute: Hashable {
+    let id: PersistentIdentifier
+}
+
+struct TaskRoute: Hashable {
+    let id: PersistentIdentifier
+}
+
+struct SessionRoute: Hashable {
+    let id: PersistentIdentifier
+}
+
+private struct ProjectDetailByIDView: View {
+    let id: PersistentIdentifier
+    @Environment(\.modelContext) private var modelContext
+
+    var body: some View {
+        if let project = modelContext.model(for: id) as? Project {
+            ProjectDetailView(project: project)
+        } else {
+            Text("Projecto não encontrado")
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct TaskDetailByIDView: View {
+    let id: PersistentIdentifier
+    @Environment(\.modelContext) private var modelContext
+
+    var body: some View {
+        if let task = modelContext.model(for: id) as? TaskItem {
+            TaskDetailView(task: task)
+        } else {
+            Text("Tarefa não encontrada")
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct SessionEditorByIDView: View {
+    let id: PersistentIdentifier
+    @Environment(\.modelContext) private var modelContext
+
+    var body: some View {
+        if let session = modelContext.model(for: id) as? Session {
+            SessionEditorView(session: session)
+        } else {
+            Text("Sessão não encontrada")
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+enum MainWindowSection: String, CaseIterable, Identifiable {
+    case sessions = "Sessões"
+    case projects = "Projectos"
+    case tasks = "Tarefas"
+    case reports = "Estatísticas"
+
+    var id: String { rawValue }
+
+    var systemImage: String {
+        switch self {
+        case .projects: "folder.fill"
+        case .tasks: "checklist"
+        case .sessions: "list.bullet.clipboard.fill"
+        case .reports: "chart.bar.fill"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .projects: .blue
+        case .tasks: .green
+        case .sessions: .orange
+        case .reports: .purple
+        }
+    }
+}
+
+struct MainWindowView: View {
+    @State private var selection: MainWindowSection? = .sessions
+
+    var body: some View {
+        NavigationSplitView {
+            VStack(spacing: 0) {
+                List(MainWindowSection.allCases, selection: $selection) { section in
+                    Label {
+                        Text(section.rawValue)
+                    } icon: {
+                        Image(systemName: section.systemImage)
+                            .foregroundStyle(section.tint)
+                    }
+                    .tag(section)
+                }
+
+                Divider()
+
+                SettingsLink {
+                    HStack {
+                        Image(systemName: "gearshape")
+                        Text("Preferências")
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+
+                Button {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    HStack {
+                        Image(systemName: "power")
+                        Text("Sair")
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+            }
+            .navigationSplitViewColumnWidth(min: 170, ideal: 190)
+        } detail: {
+            NavigationStack {
+                detailContent
+                    .navigationDestination(for: ProjectRoute.self) { route in
+                        ProjectDetailByIDView(id: route.id)
+                    }
+                    .navigationDestination(for: TaskRoute.self) { route in
+                        TaskDetailByIDView(id: route.id)
+                    }
+                    .navigationDestination(for: SessionRoute.self) { route in
+                        SessionEditorByIDView(id: route.id)
+                    }
+            }
+        }
+        .frame(minWidth: 600, minHeight: 400)
+    }
+
+    @ViewBuilder
+    private var detailContent: some View {
+        switch selection {
+        case .projects:
+            ProjectsView()
+        case .tasks:
+            TasksBrowserView()
+        case .sessions:
+            AllSessionsView()
+        case .reports:
+            ReportsView()
+        case .none:
+            Text("Selecciona uma secção")
+                .foregroundStyle(.secondary)
+        }
+    }
+}
