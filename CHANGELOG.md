@@ -7,6 +7,16 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.1.0] - 2026-08-18
+
+### Adicionado
+
+- Nas listas de sessões (aba Sessões e dentro de uma tarefa), as linhas
+  deixaram de abrir o editor ao clicar em qualquer ponto — passam a
+  mostrar, só em hover, um ícone de editar e um de apagar (este último com
+  confirmação). Acrescentado também um indicador na linha para sessões que
+  têm nota escrita.
+
 ## [1.0.2] - 2026-08-18
 
 ### Corrigido
