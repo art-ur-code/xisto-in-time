@@ -27,11 +27,12 @@ struct SessionRoute: Hashable {
 
 private struct ProjectDetailByIDView: View {
     let id: PersistentIdentifier
+    let path: Binding<NavigationPath>
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         if let project = modelContext.model(for: id) as? Project {
-            ProjectDetailView(project: project)
+            ProjectDetailView(project: project, path: path)
         } else {
             Text("Projecto não encontrado")
                 .foregroundStyle(.secondary)
@@ -41,11 +42,12 @@ private struct ProjectDetailByIDView: View {
 
 private struct TaskDetailByIDView: View {
     let id: PersistentIdentifier
+    let path: Binding<NavigationPath>
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         if let task = modelContext.model(for: id) as? TaskItem {
-            TaskDetailView(task: task)
+            TaskDetailView(task: task, path: path)
         } else {
             Text("Tarefa não encontrada")
                 .foregroundStyle(.secondary)
@@ -101,6 +103,7 @@ enum MainWindowSection: String, CaseIterable, Identifiable {
 
 struct MainWindowView: View {
     @State private var selection: MainWindowSection? = .sessions
+    @State private var path = NavigationPath()
 
     var body: some View {
         NavigationSplitView {
@@ -147,13 +150,13 @@ struct MainWindowView: View {
             }
             .navigationSplitViewColumnWidth(min: 170, ideal: 190)
         } detail: {
-            NavigationStack {
+            NavigationStack(path: $path) {
                 detailContent
                     .navigationDestination(for: ProjectRoute.self) { route in
-                        ProjectDetailByIDView(id: route.id)
+                        ProjectDetailByIDView(id: route.id, path: $path)
                     }
                     .navigationDestination(for: TaskRoute.self) { route in
-                        TaskDetailByIDView(id: route.id)
+                        TaskDetailByIDView(id: route.id, path: $path)
                     }
                     .navigationDestination(for: SessionRoute.self) { route in
                         SessionEditorByIDView(id: route.id)
@@ -167,11 +170,11 @@ struct MainWindowView: View {
     private var detailContent: some View {
         switch selection {
         case .projects:
-            ProjectsView()
+            ProjectsView(path: $path)
         case .tasks:
-            TasksBrowserView()
+            TasksBrowserView(path: $path)
         case .sessions:
-            AllSessionsView()
+            AllSessionsView(path: $path)
         case .reports:
             ReportsView()
         case .none:

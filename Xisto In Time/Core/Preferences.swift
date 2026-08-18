@@ -17,6 +17,7 @@ enum PreferencesKey {
     static let idleThresholdMinutes = "idleThresholdMinutes"
     static let idleResolutionMode = "idleResolutionMode"
     static let reportsShowWeekend = "reportsShowWeekend"
+    static let notePreviewSize = "notePreviewSize"
 }
 
 enum PreferencesDefault {
@@ -29,6 +30,7 @@ enum PreferencesDefault {
     static let idleThresholdMinutes = 10
     static let idleResolutionMode = IdleResolutionMode.ask
     static let reportsShowWeekend = true
+    static let notePreviewSize = NotePreviewSize.oneLine
 }
 
 enum IdleResolutionMode: String, CaseIterable, Identifiable {
@@ -43,6 +45,22 @@ enum IdleResolutionMode: String, CaseIterable, Identifiable {
         case .ask: "Perguntar"
         case .autoDiscard: "Descartar automaticamente"
         case .notifyOnly: "Apenas notificar"
+        }
+    }
+}
+
+enum NotePreviewSize: String, CaseIterable, Identifiable {
+    case icon
+    case oneLine
+    case twoLines
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .icon: "Ícone"
+        case .oneLine: "1 linha"
+        case .twoLines: "2 linhas"
         }
     }
 }
@@ -91,6 +109,14 @@ enum Preferences {
             return PreferencesDefault.idleResolutionMode
         }
         return mode
+    }
+
+    static func notePreviewSize() -> NotePreviewSize {
+        guard let raw = UserDefaults.standard.string(forKey: PreferencesKey.notePreviewSize),
+              let size = NotePreviewSize(rawValue: raw) else {
+            return PreferencesDefault.notePreviewSize
+        }
+        return size
     }
 
     private static func int(_ key: String, default defaultValue: Int) -> Int {

@@ -7,6 +7,28 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.2.0] - 2026-08-18
+
+### Adicionado
+
+- Preferências → Geral: novo controlo "Preview da nota" com três níveis
+  (ícone / 1 linha / 2 linhas) para as listas de sessões.
+
+### Alterado
+
+- Abrir um projecto, uma tarefa ou uma sessão a partir de uma lista passa a
+  exigir duplo clique em vez de um só — um clique simples deixou de fazer
+  nada. As linhas ganharam um chevron discreto a indicar que se abrem assim.
+- As listas de sessões (Sessões, dentro de uma Tarefa, dentro de um
+  Projecto) passam a partilhar um único componente de linha, e a edição
+  abre sempre empurrada na página (como já acontecia a partir de um
+  Projecto) em vez de num popup. Os botões de editar/apagar que apareciam
+  ao passar o rato (introduzidos na v1.1.0) foram removidos — apagar uma
+  sessão faz-se agora sempre a partir de dentro do editor.
+- O ícone de "sessão editada manualmente" (lápis) foi removido das listas;
+  o ícone de nota foi substituído por um preview do texto da nota (ver
+  preferência nova), salvo quando essa preferência está em "ícone".
+
 ## [1.1.0] - 2026-08-18
 
 ### Adicionado

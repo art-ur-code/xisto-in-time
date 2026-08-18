@@ -9,6 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct TasksBrowserView: View {
+    let path: Binding<NavigationPath>
+
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \TaskItem.title) private var tasks: [TaskItem]
     @Query(filter: #Predicate<Project> { !$0.archived }, sort: \Project.name)
@@ -25,24 +27,27 @@ struct TasksBrowserView: View {
             } else {
                 List {
                     ForEach(tasks) { task in
-                        NavigationLink(value: TaskRoute(id: task.persistentModelID)) {
-                            HStack(spacing: 10) {
+                        HStack(spacing: 10) {
+                            if let project = task.project {
+                                Circle()
+                                    .fill(project.color)
+                                    .frame(width: 10, height: 10)
+                            }
+                            VStack(alignment: .leading) {
+                                Text(task.title)
+                                    .foregroundStyle(task.archived ? .secondary : .primary)
+                                    .strikethrough(task.archived)
                                 if let project = task.project {
-                                    Circle()
-                                        .fill(project.color)
-                                        .frame(width: 10, height: 10)
-                                }
-                                VStack(alignment: .leading) {
-                                    Text(task.title)
-                                        .foregroundStyle(task.archived ? .secondary : .primary)
-                                        .strikethrough(task.archived)
-                                    if let project = task.project {
-                                        Text(project.name)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
+                                    Text(project.name)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                 }
                             }
+                            Spacer()
+                            RowDisclosureChevron()
+                        }
+                        .openOnDoubleClick {
+                            path.wrappedValue.append(TaskRoute(id: task.persistentModelID))
                         }
                         .contextMenu {
                             Button(task.archived ? "Reactivar" : "Arquivar") {

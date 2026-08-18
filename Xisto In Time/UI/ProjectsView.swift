@@ -9,6 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct ProjectsView: View {
+    let path: Binding<NavigationPath>
+
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Project.name) private var projects: [Project]
 
@@ -23,22 +25,24 @@ struct ProjectsView: View {
             } else {
                 List {
                     ForEach(projects) { project in
-                        NavigationLink(value: ProjectRoute(id: project.persistentModelID)) {
-                            HStack(spacing: 10) {
-                                Circle()
-                                    .fill(project.color)
-                                    .frame(width: 12, height: 12)
-                                Text(project.name)
-                                    .foregroundStyle(project.archived ? .secondary : .primary)
-                                    .strikethrough(project.archived)
-                                Spacer()
-                                if project.archived {
-                                    Text("Arquivado")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
+                        HStack(spacing: 10) {
+                            Circle()
+                                .fill(project.color)
+                                .frame(width: 12, height: 12)
+                            Text(project.name)
+                                .foregroundStyle(project.archived ? .secondary : .primary)
+                                .strikethrough(project.archived)
+                            Spacer()
+                            if project.archived {
+                                Text("Arquivado")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
-                            .padding(.vertical, 4)
+                            RowDisclosureChevron()
+                        }
+                        .padding(.vertical, 4)
+                        .openOnDoubleClick {
+                            path.wrappedValue.append(ProjectRoute(id: project.persistentModelID))
                         }
                         .contextMenu {
                             Button(project.archived ? "Reactivar" : "Arquivar") {

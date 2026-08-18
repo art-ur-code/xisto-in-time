@@ -10,6 +10,7 @@ import SwiftData
 
 struct ProjectDetailView: View {
     let project: Project
+    let path: Binding<NavigationPath>
 
     @Query private var tasks: [TaskItem]
     @Query(sort: \Session.startedAt, order: .reverse) private var allSessions: [Session]
@@ -18,8 +19,9 @@ struct ProjectDetailView: View {
     @State private var editName = ""
     @State private var editColor = Color.accentColor
 
-    init(project: Project) {
+    init(project: Project, path: Binding<NavigationPath>) {
         self.project = project
+        self.path = path
         let projectID = project.persistentModelID
         _tasks = Query(
             filter: #Predicate<TaskItem> { $0.project?.persistentModelID == projectID },
@@ -60,10 +62,15 @@ struct ProjectDetailView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(tasks) { task in
-                        NavigationLink(value: TaskRoute(id: task.persistentModelID)) {
+                        HStack {
                             Text(task.title)
                                 .foregroundStyle(task.archived ? .secondary : .primary)
                                 .strikethrough(task.archived)
+                            Spacer()
+                            RowDisclosureChevron()
+                        }
+                        .openOnDoubleClick {
+                            path.wrappedValue.append(TaskRoute(id: task.persistentModelID))
                         }
                     }
                 }
@@ -76,19 +83,7 @@ struct ProjectDetailView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(sessions) { session in
-                        NavigationLink(value: SessionRoute(id: session.persistentModelID)) {
-                            HStack {
-                                Text("\(session.startedAt.formatted(date: .abbreviated, time: .shortened)) – \(session.endedAt.formatted(date: .omitted, time: .shortened))")
-                                Text(session.task?.title ?? "Sem tarefa")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                                Text(TimerEngine.format(session.endedAt.timeIntervalSince(session.startedAt)))
-                                    .monospacedDigit()
-                                    .foregroundStyle(.secondary)
-                            }
-                            .font(.caption)
-                        }
+                        SessionRow(session: session, path: path)
                     }
                 }
             }

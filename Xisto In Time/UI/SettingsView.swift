@@ -46,11 +46,20 @@ struct SettingsView: View {
 private struct GeneralSettingsPane: View {
     @AppStorage(PreferencesKey.openWindowOnLaunch)
     private var openWindowOnLaunch = PreferencesDefault.openWindowOnLaunch
+    @AppStorage(PreferencesKey.notePreviewSize)
+    private var notePreviewSize = PreferencesDefault.notePreviewSize
 
     var body: some View {
         Form {
             Section {
                 Toggle("Abrir a janela principal ao iniciar", isOn: $openWindowOnLaunch)
+            }
+            Section("Listas de sessões") {
+                Picker("Preview da nota", selection: $notePreviewSize) {
+                    ForEach(NotePreviewSize.allCases) { size in
+                        Text(size.label).tag(size)
+                    }
+                }
             }
         }
         .formStyle(.grouped)
