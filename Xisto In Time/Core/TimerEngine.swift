@@ -89,6 +89,21 @@ final class TimerEngine {
         updateElapsed()
     }
 
+    /// Time left until `targetDuration` is reached, for callers that want a countdown
+    /// display (e.g. Pomodoro). `nil` when there's no target (e.g. free mode, or snoozed).
+    var remaining: TimeInterval? {
+        guard let targetDuration else { return nil }
+        return max(0, targetDuration - elapsed)
+    }
+
+    /// Overrides how much time is left until `targetDuration`, by adjusting elapsed
+    /// accordingly. Counterpart to `setElapsed` for countdown-style displays. No-op
+    /// without a target.
+    func setRemaining(_ newRemaining: TimeInterval) {
+        guard isRunning, let targetDuration, newRemaining >= 0 else { return }
+        setElapsed(max(0, targetDuration - newRemaining))
+    }
+
     @discardableResult
     func stop(endedAt overrideEndedAt: Date? = nil) -> FinishedSession? {
         guard isRunning, let startedAt else { return nil }

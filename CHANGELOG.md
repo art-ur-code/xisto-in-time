@@ -7,6 +7,17 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.0.1] - 2026-08-18
+
+### Corrigido
+
+- Modo Pomodoro: o contador deixou de arrancar sempre em 0:00 — parado, mostra
+  a duração configurada (ex. 25:00); a correr, passou a contar a decrescer até
+  0:00 em vez de subir. Tocar no contador antes de começar define uma duração
+  só para esse pomodoro, sem alterar as Preferências. Selecionar o modo
+  Pomodoro repõe qualquer valor personalizado anterior. O glifo da menu bar
+  segue a mesma contagem decrescente.
+
 ## [1.0.0] - 2026-08-18
 
 ### Adicionado

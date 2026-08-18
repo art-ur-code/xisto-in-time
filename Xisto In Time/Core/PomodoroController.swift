@@ -29,11 +29,14 @@ final class PomodoroController {
         self.modelContext = modelContext
     }
 
-    func startWork(task: TaskItem?) {
+    /// `workDuration` overrides this one work phase's target — e.g. the user edited the
+    /// countdown before pressing Começar. Doesn't touch the `Preferences` default.
+    func startWork(task: TaskItem?, workDuration: TimeInterval? = nil) {
         phase = .work
         completedWorkCycles = 0
         currentTask = task
-        timerEngine.start(targetDuration: TimeInterval(Preferences.pomodoroWorkMinutes() * 60), kind: .work, task: task)
+        let duration = workDuration ?? TimeInterval(Preferences.pomodoroWorkMinutes() * 60)
+        timerEngine.start(targetDuration: duration, kind: .work, task: task)
     }
 
     /// Manual abandon (user pressed Parar mid-phase, not via the decision).

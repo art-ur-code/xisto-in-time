@@ -31,6 +31,7 @@ struct SessionControlView: View {
     @State private var selectedTask: TaskItem?
     @State private var lastFinishedSession: Session?
     @State private var mode: TimerMode = .free
+    @State private var pomodoroWorkOverride: TimeInterval?
 
     @State private var isEditingElapsed = false
     @State private var elapsedEditText = ""
@@ -69,6 +70,11 @@ struct SessionControlView: View {
                 }
                 .pickerStyle(.segmented)
                 .disabled(timerEngine.isRunning)
+                .onChange(of: mode) { _, newMode in
+                    if newMode == .pomodoro {
+                        pomodoroWorkOverride = nil
+                    }
+                }
 
                 Picker("Projecto", selection: $selectedProject) {
                     Text("Nenhum").tag(Project?.none)
@@ -131,11 +137,11 @@ struct SessionControlView: View {
                         if !focused { commitElapsedEdit() }
                     }
             } else {
-                Text(TimerEngine.format(timerEngine.elapsed))
+                Text(TimerEngine.format(displayedInterval))
                     .font(.system(.largeTitle, design: .monospaced, weight: .semibold))
                     .help("Clica para editar o tempo decorrido")
                     .onTapGesture {
-                        elapsedEditText = TimerEngine.format(timerEngine.elapsed)
+                        elapsedEditText = TimerEngine.format(displayedInterval)
                         isEditingElapsed = true
                         elapsedFieldFocused = true
                     }
@@ -150,14 +156,37 @@ struct SessionControlView: View {
         .foregroundStyle(timerEngine.isRunning ? accentColor : .primary)
     }
 
+    /// The value shown when not actively editing: the running countdown/count-up while a
+    /// session is live, or a preview of what Começar will use while idle.
+    private var displayedInterval: TimeInterval {
+        if mode == .pomodoro {
+            if timerEngine.isRunning, let remaining = timerEngine.remaining {
+                return remaining
+            }
+            if !timerEngine.isRunning {
+                return pomodoroWorkOverride ?? TimeInterval(Preferences.pomodoroWorkMinutes() * 60)
+            }
+        }
+        return timerEngine.elapsed
+    }
+
     private func commitElapsedEdit() {
         guard isEditingElapsed else { return }
         isEditingElapsed = false
         guard let parsed = TimerEngine.parseDuration(elapsedEditText) else { return }
-        if !timerEngine.isRunning {
-            startCurrentPhase()
+
+        if mode == .pomodoro {
+            if timerEngine.isRunning {
+                timerEngine.setRemaining(parsed)
+            } else {
+                pomodoroWorkOverride = parsed
+            }
+        } else {
+            if !timerEngine.isRunning {
+                startCurrentPhase()
+            }
+            timerEngine.setElapsed(parsed)
         }
-        timerEngine.setElapsed(parsed)
     }
 
     private func projectLabel(_ project: Project) -> some View {
@@ -179,7 +208,8 @@ struct SessionControlView: View {
     private func startCurrentPhase() {
         lastFinishedSession = nil
         if mode == .pomodoro {
-            pomodoro.startWork(task: selectedTask)
+            pomodoro.startWork(task: selectedTask, workDuration: pomodoroWorkOverride)
+            pomodoroWorkOverride = nil
         } else {
             timerEngine.start(kind: .work, task: selectedTask)
         }

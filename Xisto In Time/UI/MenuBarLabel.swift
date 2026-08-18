@@ -15,7 +15,7 @@ struct MenuBarLabel: View {
             Image(systemName: "circle.dashed")
                 .symbolEffect(.pulse, isActive: timerEngine.isRunning)
             if timerEngine.isRunning {
-                Text(TimerEngine.format(timerEngine.elapsed))
+                Text(TimerEngine.format(timerEngine.remaining ?? timerEngine.elapsed))
                     .monospacedDigit()
             }
         }
