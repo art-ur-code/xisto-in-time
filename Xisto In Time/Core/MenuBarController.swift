@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Observation
 import SwiftData
 import SwiftUI
 
@@ -17,6 +18,7 @@ final class MenuBarController: NSObject {
     private let statusItem: NSStatusItem
     private let popover: NSPopover
     private let mainWindowController: MainWindowController
+    private var labelHostingView: NSHostingView<AnyView>?
 
     init(timerEngine: TimerEngine, pomodoro: PomodoroController, modelContext: ModelContext) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -47,7 +49,7 @@ final class MenuBarController: NSObject {
         super.init()
 
         if let button = statusItem.button {
-            let hosting = NSHostingView(rootView: MenuBarLabel().environment(timerEngine))
+            let hosting = NSHostingView(rootView: AnyView(MenuBarLabel().environment(timerEngine)))
             hosting.sizingOptions = [.intrinsicContentSize]
             hosting.translatesAutoresizingMaskIntoConstraints = false
             button.addSubview(hosting)
@@ -60,11 +62,39 @@ final class MenuBarController: NSObject {
             button.target = self
             button.action = #selector(togglePopover)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+
+            labelHostingView = hosting
+            refreshStatusItemWidth()
+            observeLabelWidth(timerEngine: timerEngine)
         }
 
         if Preferences.openWindowOnLaunch() {
             windowController.show()
         }
+    }
+
+    /// `NSStatusItem.variableLength` only sizes the button from its own cell
+    /// (title/image); it never re-measures an arbitrary hosted SwiftUI
+    /// subview after the first layout. Without this, the button stays stuck
+    /// at its initial (icon-only) width and any longer content (e.g. the
+    /// running-session label) gets silently clipped instead of the item
+    /// growing to fit it.
+    private func observeLabelWidth(timerEngine: TimerEngine) {
+        withObservationTracking {
+            _ = timerEngine.isRunning
+            _ = timerEngine.currentTask?.project?.name
+        } onChange: { [weak self] in
+            DispatchQueue.main.async {
+                self?.refreshStatusItemWidth()
+                self?.observeLabelWidth(timerEngine: timerEngine)
+            }
+        }
+    }
+
+    private func refreshStatusItemWidth() {
+        guard let labelHostingView else { return }
+        labelHostingView.layoutSubtreeIfNeeded()
+        statusItem.length = labelHostingView.fittingSize.width
     }
 
     @objc private func togglePopover() {

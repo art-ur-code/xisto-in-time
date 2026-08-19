@@ -15,10 +15,17 @@ struct MenuBarLabel: View {
             Image(systemName: "circle.dashed")
                 .symbolEffect(.pulse, isActive: timerEngine.isRunning)
             if timerEngine.isRunning {
-                Text(TimerEngine.format(timerEngine.remaining ?? timerEngine.elapsed))
-                    .monospacedDigit()
+                let time = TimerEngine.format(timerEngine.remaining ?? timerEngine.elapsed)
+                if let projectName = timerEngine.currentTask?.project?.name {
+                    Text("\(projectName) - \(time)")
+                        .monospacedDigit()
+                } else {
+                    Text(time)
+                        .monospacedDigit()
+                }
             }
         }
         .padding(.horizontal, 6)
+        .fixedSize()
     }
 }

@@ -7,6 +7,21 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.5.0] - 2026-08-19
+
+### Adicionado
+
+- Barra de menu: enquanto há uma sessão a correr associada a uma tarefa com
+  projecto, mostra `"Projecto - hh:mm:ss"` em vez de só o tempo.
+
+### Corrigido
+
+- `MenuBarController` passou a medir e definir explicitamente a largura do
+  `NSStatusItem` a partir do conteúdo SwiftUI hospedado, em vez de confiar
+  no auto-dimensionamento do `.variableLength` (que só olha para
+  título/imagem nativos do botão e nunca via a subview): o texto da sessão
+  a correr ficava sempre cortado a zero, preso na largura do ícone parado.
+
 ## [1.4.0] - 2026-08-19
 
 ### Adicionado
