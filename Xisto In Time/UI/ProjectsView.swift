@@ -47,6 +47,7 @@ struct ProjectsView: View {
                         .contextMenu {
                             Button(project.archived ? "Reactivar" : "Arquivar") {
                                 project.archived.toggle()
+                                modelContext.saveAndCheckpoint()
                             }
                         }
                     }
@@ -71,6 +72,7 @@ struct ProjectsView: View {
                 let trimmed = newProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { return }
                 modelContext.insert(Project(name: trimmed, colorHex: newProjectColor.toHex()))
+                modelContext.saveAndCheckpoint()
                 showingNewProjectSheet = false
             } onCancel: {
                 showingNewProjectSheet = false

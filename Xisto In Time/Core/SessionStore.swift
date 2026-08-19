@@ -19,6 +19,7 @@ enum SessionStore {
             interrupted: finished.interrupted
         )
         context.insert(session)
+        context.saveAndCheckpoint()
         return session
     }
 }

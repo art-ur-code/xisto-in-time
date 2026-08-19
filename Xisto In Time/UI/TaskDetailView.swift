@@ -11,6 +11,7 @@ import SwiftData
 struct TaskDetailView: View {
     let task: TaskItem
     let path: Binding<NavigationPath>
+    @Environment(\.modelContext) private var modelContext
     @Query private var sessions: [Session]
     @Query(filter: #Predicate<Project> { !$0.archived }, sort: \Project.name)
     private var projects: [Project]
@@ -91,6 +92,7 @@ struct TaskDetailView: View {
                 guard !trimmed.isEmpty, let editProject else { return }
                 task.title = trimmed
                 task.project = editProject
+                modelContext.saveAndCheckpoint()
                 showingEditSheet = false
             } onCancel: {
                 showingEditSheet = false

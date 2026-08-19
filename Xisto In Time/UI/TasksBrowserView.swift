@@ -52,6 +52,7 @@ struct TasksBrowserView: View {
                         .contextMenu {
                             Button(task.archived ? "Reactivar" : "Arquivar") {
                                 task.archived.toggle()
+                                modelContext.saveAndCheckpoint()
                             }
                         }
                     }
@@ -77,6 +78,7 @@ struct TasksBrowserView: View {
                 let trimmed = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty, let newTaskProject else { return }
                 modelContext.insert(TaskItem(title: trimmed, project: newTaskProject))
+                modelContext.saveAndCheckpoint()
                 showingNewTaskSheet = false
             } onCancel: {
                 showingNewTaskSheet = false

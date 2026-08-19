@@ -129,6 +129,7 @@ struct SessionEditorView: View {
             Button("Apagar", role: .destructive) {
                 if let existingSession {
                     modelContext.delete(existingSession)
+                    modelContext.saveAndCheckpoint()
                 }
                 dismiss()
             }
@@ -189,6 +190,7 @@ struct SessionEditorView: View {
             )
             modelContext.insert(newSession)
         }
+        modelContext.saveAndCheckpoint()
         dismiss()
     }
 

@@ -5,6 +5,7 @@
 //  Created by Artur Tavares on 18/08/2026.
 //
 
+import AppKit
 import SwiftUI
 import SwiftData
 
@@ -14,16 +15,42 @@ struct Xisto_In_TimeApp: App {
     private let overlayController = OverlayController()
     private let idleMonitor: IdleMonitor
     private let menuBarController: MenuBarController
+    private let checkpointTimer: Timer
+    private var terminationObserver: NSObjectProtocol?
 
     @State private var timerEngine: TimerEngine
     @State private var pomodoro: PomodoroController
 
     init() {
         let schema = Schema([Session.self, TaskItem.self, Project.self])
+        let storeURL = URL.applicationSupportDirectory.appending(path: "default.store")
+        StoreMaintenance.backupBeforeOpening(storeURL: storeURL)
         do {
-            sharedModelContainer = try ModelContainer(for: schema, configurations: [ModelConfiguration()])
+            sharedModelContainer = try ModelContainer(for: schema, configurations: [ModelConfiguration(url: storeURL)])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
+        }
+
+        // Safety net beyond the explicit save-on-every-edit calls elsewhere:
+        // guarantees no more than a minute of work is ever at risk even if
+        // some future code path forgets to save explicitly.
+        let container = sharedModelContainer
+        checkpointTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
+            Task { @MainActor in
+                container.mainContext.saveAndCheckpoint()
+            }
+        }
+        terminationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            // `queue: .main` guarantees this already runs on the main thread;
+            // deferring into a new Task risks it firing after the process
+            // has already exited, defeating the point of this hook.
+            MainActor.assumeIsolated {
+                container.mainContext.saveAndCheckpoint()
+            }
         }
 
         let engine = TimerEngine()

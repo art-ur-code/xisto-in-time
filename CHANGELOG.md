@@ -7,6 +7,26 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.6.0] - 2026-08-19
+
+### Adicionado
+
+- Backups locais rotativos: em cada arranque, antes de abrir a base de dados,
+  o `default.store` anterior é copiado para
+  `~/Library/Application Support/Xisto Backups/`, mantendo os últimos 10.
+  Sem isto, uma base de dados corrompida não tinha forma de recuperação —
+  esta máquina não tem Time Machine configurado.
+
+### Corrigido
+
+- Perda total do histórico após um crash: nenhuma escrita (fim de sessão,
+  criar/editar/arquivar projecto ou tarefa) chamava `context.save()` — tudo
+  dependia do autosave implícito do SwiftData, que nunca chegou a gravar no
+  ficheiro em disco ao longo de 36h de uso. `ModelContext.saveAndCheckpoint()`
+  (`Core/StoreMaintenance.swift`) grava e força o merge do WAL da SQLite para
+  o ficheiro principal imediatamente a seguir a cada escrita, com um timer de
+  60s como rede de segurança adicional e gravação final ao terminar a app.
+
 ## [1.5.0] - 2026-08-19
 
 ### Adicionado

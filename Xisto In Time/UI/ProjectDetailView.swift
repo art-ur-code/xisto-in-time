@@ -12,6 +12,7 @@ struct ProjectDetailView: View {
     let project: Project
     let path: Binding<NavigationPath>
 
+    @Environment(\.modelContext) private var modelContext
     @Query private var tasks: [TaskItem]
     @Query(sort: \Session.startedAt, order: .reverse) private var allSessions: [Session]
 
@@ -105,6 +106,7 @@ struct ProjectDetailView: View {
                 guard !trimmed.isEmpty else { return }
                 project.name = trimmed
                 project.colorHex = editColor.toHex()
+                modelContext.saveAndCheckpoint()
                 showingEditSheet = false
             } onCancel: {
                 showingEditSheet = false
