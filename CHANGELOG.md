@@ -7,6 +7,19 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.4.0] - 2026-08-19
+
+### Adicionado
+
+- Overlay de decisão do pomodoro: terceira opção "Terminar Sessão", que
+  termina a sessão actual e reinicia o cronómetro (equivalente a premir
+  Parar), para quando não vou fazer pausa nem continuar a mesma tarefa.
+
+### Corrigido
+
+- Botões do overlay de decisão do pomodoro com feedback de hover, que não
+  aparecia com os estilos nativos dentro do `NSPanel` personalizado.
+
 ## [1.3.2] - 2026-08-19
 
 ### Corrigido

@@ -38,7 +38,8 @@ struct Xisto_In_TimeApp: App {
                 PomodoroDecisionView(
                     phase: controller.phase,
                     onAdvance: { controller.advance(); overlay.hide() },
-                    onSnooze: { controller.snooze(); overlay.hide() }
+                    onSnooze: { controller.snooze(); overlay.hide() },
+                    onTerminate: { controller.cancel(); overlay.hide() }
                 )
             }
         }
