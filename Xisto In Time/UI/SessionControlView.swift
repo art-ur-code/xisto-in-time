@@ -8,12 +8,6 @@
 import SwiftUI
 import SwiftData
 
-private enum TimerMode: String, CaseIterable, Identifiable {
-    case free = "Livre"
-    case pomodoro = "Pomodoro"
-    var id: String { rawValue }
-}
-
 /// Start/stop control for the shared `TimerEngine`/`PomodoroController` —
 /// the same live timer, usable from both the popover and the main window.
 struct SessionControlView: View {
@@ -21,16 +15,17 @@ struct SessionControlView: View {
     @Environment(PomodoroController.self) private var pomodoro
     @Environment(\.modelContext) private var modelContext
 
-    @Query(filter: #Predicate<Project> { !$0.archived }, sort: \Project.name)
-    private var projects: [Project]
-
-    @Query(filter: #Predicate<TaskItem> { !$0.archived }, sort: \TaskItem.title)
-    private var tasks: [TaskItem]
+    @Query(sort: \Session.startedAt, order: .reverse)
+    private var sessions: [Session]
 
     @State private var selectedProject: Project?
     @State private var selectedTask: TaskItem?
-    @State private var mode: TimerMode = .free
+    @State private var showingPicker = false
+    @AppStorage(PreferencesKey.lastSessionMode) private var mode = PreferencesDefault.lastSessionMode
+    @AppStorage(PreferencesKey.pomodoroWorkMinutes) private var focusMinutes = PreferencesDefault.pomodoroWorkMinutes
+    @AppStorage(PreferencesKey.pomodoroCyclesBeforeLongBreak) private var blocks = PreferencesDefault.pomodoroCyclesBeforeLongBreak
     @State private var pomodoroWorkOverride: TimeInterval?
+    @State private var pulseOpacity: Double = 1
 
     @State private var isEditingElapsed = false
     @State private var elapsedEditText = ""
@@ -42,17 +37,39 @@ struct SessionControlView: View {
         self.compact = compact
     }
 
-    private var tasksForSelectedProject: [TaskItem] {
-        guard let selectedProject else { return [] }
-        return tasks.filter { $0.project?.persistentModelID == selectedProject.persistentModelID }
-    }
-
     private var accentColor: Color {
         selectedProject?.color ?? .accentColor
     }
 
     var body: some View {
+        Group {
+            if showingPicker {
+                TaskPickerView(
+                    currentTask: selectedTask,
+                    onSelect: { task in
+                        selectedTask = task
+                        selectedProject = task.project
+                        withAnimation(.easeInOut(duration: 0.25)) { showingPicker = false }
+                    },
+                    onCancel: {
+                        withAnimation(.easeInOut(duration: 0.25)) { showingPicker = false }
+                    }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else {
+                normalContent
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: showingPicker)
+    }
+
+    private var normalContent: some View {
         VStack(alignment: .leading, spacing: compact ? 8 : 14) {
+            if timerEngine.isRunning {
+                runningIndicatorRow
+            }
+
             timerCard
 
             if timerEngine.interrupted {
@@ -67,44 +84,36 @@ struct SessionControlView: View {
                     .foregroundStyle(.secondary)
             }
 
-            if mode == .pomodoro && timerEngine.isRunning {
-                Text(pomodoroPhaseLabel)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            if !timerEngine.isRunning {
+                VStack(alignment: .leading, spacing: 6) {
+                    Picker("Modo", selection: $mode) {
+                        ForEach(TimerMode.allCases) { m in
+                            Text(m.label).tag(m)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .onChange(of: mode) { _, newMode in
+                        if newMode == .pomodoro {
+                            pomodoroWorkOverride = nil
+                        }
+                    }
+
+                    Text(modeLegend)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                if mode == .pomodoro {
+                    focusBlocksConfig
+                }
             }
 
-            VStack(alignment: .leading, spacing: 10) {
-                Picker("Modo", selection: $mode) {
-                    ForEach(TimerMode.allCases) { m in
-                        Text(m.rawValue).tag(m)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .disabled(timerEngine.isRunning)
-                .onChange(of: mode) { _, newMode in
-                    if newMode == .pomodoro {
-                        pomodoroWorkOverride = nil
-                    }
-                }
+            contextCell
 
-                Picker("Projecto", selection: $selectedProject) {
-                    Text("Nenhum").tag(Project?.none)
-                    ForEach(projects) { project in
-                        projectLabel(project).tag(Project?.some(project))
-                    }
-                }
-                .onChange(of: selectedProject) { selectedTask = nil }
-
-                Picker("Tarefa", selection: $selectedTask) {
-                    Text("Nenhuma").tag(TaskItem?.none)
-                    ForEach(tasksForSelectedProject) { task in
-                        Text(task.title).tag(TaskItem?.some(task))
-                    }
-                }
-                .disabled(selectedProject == nil)
+            if !timerEngine.isRunning {
+                lastTaskFooter
             }
-            .padding(10)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
 
             if timerEngine.isRunning {
                 HStack(spacing: 8) {
@@ -139,7 +148,7 @@ struct SessionControlView: View {
                 Button {
                     startCurrentPhase()
                 } label: {
-                    Label("Começar", systemImage: "play.fill")
+                    Label(startButtonTitle, systemImage: "play.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -159,31 +168,39 @@ struct SessionControlView: View {
                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
             }
         }
+        .animation(.easeInOut(duration: 0.2), value: mode)
+        .animation(.easeInOut(duration: 0.2), value: timerEngine.isRunning)
         .frame(maxWidth: compact ? .infinity : 420, alignment: .leading)
     }
 
     private var timerCard: some View {
-        Group {
-            if isEditingElapsed {
-                TextField("H:MM:SS", text: $elapsedEditText)
-                    .font(.system(compact ? .title2 : .largeTitle, design: .monospaced, weight: .semibold))
-                    .multilineTextAlignment(.center)
-                    .textFieldStyle(.plain)
-                    .focused($elapsedFieldFocused)
-                    .onSubmit(commitElapsedEdit)
-                    .onExitCommand { isEditingElapsed = false }
-                    .onChange(of: elapsedFieldFocused) { _, focused in
-                        if !focused { commitElapsedEdit() }
-                    }
-            } else {
-                Text(TimerEngine.format(displayedInterval))
-                    .font(.system(compact ? .title2 : .largeTitle, design: .monospaced, weight: .semibold))
-                    .help("Clica para editar o tempo decorrido")
-                    .onTapGesture {
-                        elapsedEditText = TimerEngine.format(displayedInterval)
-                        isEditingElapsed = true
-                        elapsedFieldFocused = true
-                    }
+        VStack(spacing: 8) {
+            Group {
+                if isEditingElapsed {
+                    TextField("H:MM:SS", text: $elapsedEditText)
+                        .font(.system(compact ? .title2 : .largeTitle, design: .monospaced, weight: .semibold))
+                        .multilineTextAlignment(.center)
+                        .textFieldStyle(.plain)
+                        .focused($elapsedFieldFocused)
+                        .onSubmit(commitElapsedEdit)
+                        .onExitCommand { isEditingElapsed = false }
+                        .onChange(of: elapsedFieldFocused) { _, focused in
+                            if !focused { commitElapsedEdit() }
+                        }
+                } else {
+                    Text(formattedTimerText(displayedInterval))
+                        .font(.system(compact ? .title2 : .largeTitle, design: .monospaced, weight: .semibold))
+                        .help("Clica para editar o tempo decorrido")
+                        .onTapGesture {
+                            elapsedEditText = formattedTimerText(displayedInterval)
+                            isEditingElapsed = true
+                            elapsedFieldFocused = true
+                        }
+                }
+            }
+
+            if mode == .pomodoro {
+                blockBars(completed: timerEngine.isRunning ? pomodoro.completedWorkCycles : 0)
             }
         }
         .frame(maxWidth: .infinity)
@@ -195,6 +212,133 @@ struct SessionControlView: View {
         .foregroundStyle(timerEngine.isRunning ? accentColor : .primary)
     }
 
+    private var runningIndicatorRow: some View {
+        HStack {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(accentColor)
+                    .frame(width: 7, height: 7)
+                    .opacity(pulseOpacity)
+                    .onAppear {
+                        pulseOpacity = 1
+                        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                            pulseOpacity = 0.15
+                        }
+                    }
+                Text(runningStatusText)
+                    .font(.caption.weight(.semibold))
+            }
+            Spacer()
+            Text(runningTimeHint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func blockBars(completed: Int) -> some View {
+        HStack(spacing: 4) {
+            ForEach(0..<blocks, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(barColor(for: index, completed: completed))
+                    .frame(width: 22, height: 5)
+            }
+        }
+    }
+
+    private func barColor(for index: Int, completed: Int) -> Color {
+        if index < completed {
+            accentColor
+        } else if index == completed && timerEngine.isRunning {
+            accentColor.opacity(0.5)
+        } else {
+            Color(nsColor: .quaternaryLabelColor)
+        }
+    }
+
+    private var runningStatusText: String {
+        if mode == .pomodoro {
+            switch pomodoro.phase {
+            case .work: return "Foco \(pomodoro.completedWorkCycles + 1) de \(blocks)"
+            case .shortBreak: return "Pausa curta"
+            case .longBreak: return "Pausa longa"
+            }
+        }
+        return "A contar · Livre"
+    }
+
+    private var runningTimeHint: String {
+        if mode == .pomodoro, let remaining = timerEngine.remaining {
+            let endsAt = Date().addingTimeInterval(remaining)
+            let label = pomodoro.phase == .work ? "pausa às" : "volta às"
+            return "\(label) \(endsAt.formatted(date: .omitted, time: .shortened))"
+        }
+        let startedAt = Date().addingTimeInterval(-timerEngine.elapsed)
+        return "desde \(startedAt.formatted(date: .omitted, time: .shortened))"
+    }
+
+    private func formattedTimerText(_ interval: TimeInterval) -> String {
+        guard mode == .pomodoro else { return TimerEngine.format(interval) }
+        let total = Int(interval.rounded())
+        return String(format: "%d:%02d", total / 60, total % 60)
+    }
+
+    private var modeLegend: String {
+        switch mode {
+        case .free:
+            return "Conta para cima até parares. Sem pausas automáticas."
+        case .pomodoro:
+            let endsAt = Date().addingTimeInterval(pomodoroEstimatedDuration)
+            let endsAtText = endsAt.formatted(date: .omitted, time: .shortened)
+            return "\(blocks) blocos de foco com \(Preferences.pomodoroShortBreakMinutes()) min de pausa. Termina às \(endsAtText)."
+        }
+    }
+
+    private var pomodoroEstimatedDuration: TimeInterval {
+        let focusSeconds = TimeInterval(focusMinutes * 60 * blocks)
+        let breakSeconds = TimeInterval(Preferences.pomodoroShortBreakMinutes() * 60 * max(0, blocks - 1))
+        return focusSeconds + breakSeconds
+    }
+
+    private var startButtonTitle: String {
+        mode == .pomodoro ? "Começar foco 1 de \(blocks)" : "Começar"
+    }
+
+    private var focusBlocksConfig: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Foco")
+                Spacer()
+                Picker("", selection: $focusMinutes) {
+                    ForEach([15, 25, 45, 50], id: \.self) { minutes in
+                        Text("\(minutes) min").tag(minutes)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+            }
+            .padding(.vertical, 6)
+
+            Divider()
+
+            HStack {
+                Text("Blocos")
+                Spacer()
+                Picker("", selection: $blocks) {
+                    ForEach(2...8, id: \.self) { n in
+                        Text("\(n)").tag(n)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+            }
+            .padding(.vertical, 6)
+        }
+        .padding(.horizontal, 10)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+
     /// The value shown when not actively editing: the running countdown/count-up while a
     /// session is live, or a preview of what Começar will use while idle.
     private var displayedInterval: TimeInterval {
@@ -203,7 +347,7 @@ struct SessionControlView: View {
                 return remaining
             }
             if !timerEngine.isRunning {
-                return pomodoroWorkOverride ?? TimeInterval(Preferences.pomodoroWorkMinutes() * 60)
+                return pomodoroWorkOverride ?? TimeInterval(focusMinutes * 60)
             }
         }
         return timerEngine.elapsed
@@ -228,20 +372,78 @@ struct SessionControlView: View {
         }
     }
 
-    private func projectLabel(_ project: Project) -> some View {
-        Label {
-            Text(project.name)
-        } icon: {
-            Circle().fill(project.color).frame(width: 10, height: 10)
+    private var contextCell: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                if let selectedTask {
+                    Text("A REGISTAR EM")
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(0.6)
+                        .foregroundStyle(.secondary)
+                    Text(selectedTask.title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .lineLimit(2)
+                    if let project = selectedTask.project {
+                        Text(project.name)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("A REGISTAR EM")
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(0.6)
+                        .foregroundStyle(.secondary)
+                    Text("Sem tarefa")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            if !timerEngine.isRunning {
+                Button("Mudar") { showingPicker = true }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+            }
+        }
+        .padding(12)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if !timerEngine.isRunning { showingPicker = true }
         }
     }
 
-    private var pomodoroPhaseLabel: String {
-        switch pomodoro.phase {
-        case .work: "Trabalho"
-        case .shortBreak: "Pausa curta"
-        case .longBreak: "Pausa longa"
+    @ViewBuilder
+    private var lastTaskFooter: some View {
+        if let lastTask {
+            HStack {
+                Text("Última: \(lastTask.title) · \(ReportBuilder.formatHoursMinutes(todayTotal(for: lastTask)))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Spacer()
+                Button("Retomar") {
+                    selectedTask = lastTask
+                    selectedProject = lastTask.project
+                    startCurrentPhase()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+            }
         }
+    }
+
+    private var lastTask: TaskItem? {
+        sessions.first(where: { $0.task != nil })?.task
+    }
+
+    private func todayTotal(for task: TaskItem) -> TimeInterval {
+        let taskID = task.persistentModelID
+        return ReportBuilder.dailyReport(sessions: sessions, day: Date()).sessions
+            .filter { $0.task?.persistentModelID == taskID }
+            .reduce(0) { $0 + $1.endedAt.timeIntervalSince($1.startedAt) }
     }
 
     private func startCurrentPhase() {

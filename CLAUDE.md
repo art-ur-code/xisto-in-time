@@ -89,14 +89,38 @@ Xisto/
 primeiro com `MenuBarExtra(.window)` (fases 1–8), mas o SwiftUI não dá
 forma de distinguir clique esquerdo de direito nesse botão — qualquer
 view personalizada metida lá dentro para apanhar o `rightMouseDown` nunca
-recebe o evento. Também tentámos um menu de clique direito (Abrir Janela /
-Preferências / Sair) gerido à mão com `NSMenu`, mas simplificámos:
-qualquer clique no ícone (`Core/MenuBarController.swift`, `NSStatusItem`
-à mão, `button.sendAction(on: [.leftMouseUp, .rightMouseUp])`) abre/fecha
-sempre o popover — sem menu de contexto. O cabeçalho "Xisto" dentro do
-popover é que abre a janela principal; "Preferências" e "Sair" vivem no
-fundo da barra lateral da janela principal (`SettingsLink`, e um botão
-simples com `NSApplication.shared.terminate(nil)`). Por associação, a
+recebe o evento. Chegámos a simplificar para "qualquer clique abre/fecha
+sempre o popover, sem menu de contexto", mas voltámos atrás: clique
+esquerdo no ícone (`Core/MenuBarController.swift`, `NSStatusItem` à mão,
+`button.sendAction(on: [.leftMouseUp, .rightMouseUp])`) alterna o
+popover; clique direito mostra um `NSMenu` pequeno ("Abrir janela" /
+"Sair") via `NSMenu.popUp(positioning:at:in:)`, distinguindo os dois
+através de `NSApp.currentEvent?.type`. O cabeçalho "Hoje Xh Ym" dentro do
+popover também abre a janela principal, e a engrenagem ao lado abre
+Preferências directamente (`SettingsLink`); "Preferências" e "Sair"
+continuam também no fundo da barra lateral da janela principal.
+
+**O popover já não é um `NSPopover`.** Com o conteúdo a variar de altura
+(legenda do modo, configuração do Pomodoro, selector de tarefa), o
+`NSPopover` reposicionava-se por vezes com base num tamanho desactualizado
+e aparecia fora do sítio — tentámos propagar `preferredContentSize` e
+depois impor um tecto de altura ao conteúdo, sem sucesso consistente. A
+solução foi deixar de depender do posicionamento automático: o popover é
+agora um `NSPanel` próprio (`Core/MenuBarController.swift`, `styleMask:
+[.borderless, .nonactivatingPanel]`, `isMovableByWindowBackground = true`),
+que se arrasta clicando numa área livre e memoriza essa posição
+(`Preferences.popoverOrigin`/`setPopoverOrigin`) — na primeira vez, ou se a
+posição guardada deixar de caber em nenhum ecrã ligado, calcula-se uma por
+baixo do ícone. Como um `NSPanel` não fecha sozinho ao clicar fora,
+`MenuBarController` instala dois `NSEvent` monitors (global e local)
+enquanto está visível para replicar esse comportamento. `PopoverView.swift`
+ganhou o próprio fundo (`.regularMaterial` com cantos arredondados), já
+que deixou de haver o balão do `NSPopover` a dar-lho. Um
+`AppDelegate` (`Core/AppDelegate.swift`, ligado via
+`@NSApplicationDelegateAdaptor`) implementa
+`applicationShouldHandleReopen` para relançar a janela principal ao abrir
+a app pelo Spotlight enquanto já está a correr, apesar de não ter ícone
+no Dock. Por associação, a
 janela principal também passou a ser gerida à mão
 (`MainWindowController.swift`, um `NSWindow` simples) em vez de uma
 `Window` scene do SwiftUI — assim que o popover e a janela deixam de
@@ -114,8 +138,9 @@ A app **não vive inteira na menu bar**. Há duas superfícies distintas, com
 responsabilidades diferentes:
 
 - **Popover da menu bar** (`PopoverView.swift`, mostrado por
-  `MenuBarController` num `NSPopover`) — minimalista, para interacções
-  rápidas de segundos: tempo decorrido, botão Começar/Parar, um selector
+  `MenuBarController` num `NSPanel` próprio — ver nota acima) —
+  minimalista, para interacções rápidas de segundos: tempo decorrido,
+  botão Começar/Parar, um selector
   do projecto/tarefa já existentes (sem criar nem arquivar nada aqui), a
   nota opcional ao fechar a sessão, e o cabeçalho "Xisto" que abre a
   janela principal. Nada de navegação em profundidade, nada de CRUD, nada

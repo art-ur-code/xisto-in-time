@@ -6,14 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct PopoverView: View {
     let onOpenMainWindow: () -> Void
 
     @Environment(TimerEngine.self) private var timerEngine
+    @Query(sort: \Session.startedAt, order: .reverse) private var sessions: [Session]
 
-    private var headerAccentColor: Color {
-        timerEngine.isRunning ? (timerEngine.currentTask?.project?.color ?? .accentColor) : .accentColor
+    private var todayTotal: TimeInterval {
+        ReportBuilder.dailyReport(sessions: sessions, day: Date()).total
     }
 
     var body: some View {
@@ -22,22 +24,35 @@ struct PopoverView: View {
             SessionControlView()
         }
         .padding(16)
-        .frame(width: 290)
+        .frame(width: 360)
+        // Hard height cap so the hosting panel never has to guess at an
+        // unbounded size while the content resizes (mode legend, Pomodoro
+        // config, task picker).
+        .frame(maxHeight: 600, alignment: .top)
+        // The panel itself is a plain borderless NSPanel (see
+        // MenuBarController) — no more NSPopover chrome, so the rounded
+        // material background lives here instead.
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var header: some View {
-        Button(action: onOpenMainWindow) {
-            HStack(spacing: 6) {
-                Image(systemName: "circle.dashed")
-                    .foregroundStyle(headerAccentColor)
-                    .font(.title3)
-                Text("Xisto")
+        HStack(spacing: 6) {
+            Button(action: onOpenMainWindow) {
+                Text("Hoje \(ReportBuilder.formatHoursMinutes(todayTotal))")
                     .font(.headline)
-                Spacer()
+                    .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .help("Abrir janela")
+
+            Spacer()
+
+            SettingsLink {
+                Image(systemName: "gearshape")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Preferências")
         }
-        .buttonStyle(.plain)
-        .help("Abrir janela")
     }
 }

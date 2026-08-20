@@ -11,6 +11,8 @@ import SwiftData
 
 @main
 struct Xisto_In_TimeApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     private let sharedModelContainer: ModelContainer
     private let overlayController = OverlayController()
     private let idleMonitor: IdleMonitor
@@ -101,7 +103,13 @@ struct Xisto_In_TimeApp: App {
             }
         }
 
-        menuBarController = MenuBarController(timerEngine: engine, pomodoro: controller, modelContext: modelContext)
+        let bar = MenuBarController(timerEngine: engine, pomodoro: controller, modelContext: modelContext)
+        menuBarController = bar
+
+        let delegate = appDelegate
+        delegate.onReopen = { [weak bar] in
+            bar?.showMainWindow()
+        }
     }
 
     var body: some Scene {

@@ -104,6 +104,7 @@ enum MainWindowSection: String, CaseIterable, Identifiable {
 struct MainWindowView: View {
     @State private var selection: MainWindowSection? = .sessions
     @State private var path = NavigationPath()
+    @AppStorage(PreferencesKey.sidebarWidth) private var sidebarWidth = PreferencesDefault.sidebarWidth
 
     var body: some View {
         NavigationSplitView {
@@ -152,7 +153,15 @@ struct MainWindowView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
             }
-            .navigationSplitViewColumnWidth(min: 170, ideal: 190)
+            .background(
+                GeometryReader { geometry in
+                    Color.clear
+                        .onChange(of: geometry.size.width) { _, newWidth in
+                            sidebarWidth = newWidth
+                        }
+                }
+            )
+            .navigationSplitViewColumnWidth(min: 170, ideal: sidebarWidth, max: 400)
         } detail: {
             NavigationStack(path: $path) {
                 detailContent

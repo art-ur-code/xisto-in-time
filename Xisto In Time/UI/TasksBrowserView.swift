@@ -70,7 +70,6 @@ struct TasksBrowserView: View {
                 } label: {
                     Label("Nova tarefa", systemImage: "plus")
                 }
-                .disabled(projects.isEmpty)
             }
         }
         .sheet(isPresented: $showingNewTaskSheet) {

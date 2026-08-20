@@ -31,11 +31,19 @@ final class MainWindowController: NSObject, NSWindowDelegate {
         let newWindow = NSWindow(contentViewController: hosting)
         newWindow.title = "Xisto"
         newWindow.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        newWindow.setContentSize(NSSize(width: 700, height: 480))
         newWindow.isReleasedWhenClosed = false
         newWindow.delegate = self
+
+        // Remembers position and size across launches. If there's no saved
+        // frame yet (first run), fall back to a sensible centered default.
+        let autosaveName = NSWindow.FrameAutosaveName("MainWindow")
+        if !newWindow.setFrameUsingName(autosaveName) {
+            newWindow.setContentSize(NSSize(width: 700, height: 480))
+            newWindow.center()
+        }
+        newWindow.setFrameAutosaveName(autosaveName)
+
         window = newWindow
-        newWindow.center()
         newWindow.makeKeyAndOrderFront(nil)
     }
 }

@@ -18,6 +18,10 @@ enum PreferencesKey {
     static let idleResolutionMode = "idleResolutionMode"
     static let reportsShowWeekend = "reportsShowWeekend"
     static let notePreviewSize = "notePreviewSize"
+    static let lastSessionMode = "lastSessionMode"
+    static let sidebarWidth = "sidebarWidth"
+    static let popoverOriginX = "popoverOriginX"
+    static let popoverOriginY = "popoverOriginY"
 }
 
 enum PreferencesDefault {
@@ -31,6 +35,22 @@ enum PreferencesDefault {
     static let idleResolutionMode = IdleResolutionMode.ask
     static let reportsShowWeekend = true
     static let notePreviewSize = NotePreviewSize.oneLine
+    static let lastSessionMode = TimerMode.free
+    static let sidebarWidth = 190.0
+}
+
+enum TimerMode: String, CaseIterable, Identifiable {
+    case free
+    case pomodoro
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .free: "Livre"
+        case .pomodoro: "Pomodoro"
+        }
+    }
 }
 
 enum IdleResolutionMode: String, CaseIterable, Identifiable {
@@ -117,6 +137,32 @@ enum Preferences {
             return PreferencesDefault.notePreviewSize
         }
         return size
+    }
+
+    static func lastSessionMode() -> TimerMode {
+        guard let raw = UserDefaults.standard.string(forKey: PreferencesKey.lastSessionMode),
+              let mode = TimerMode(rawValue: raw) else {
+            return PreferencesDefault.lastSessionMode
+        }
+        return mode
+    }
+
+    /// `nil` until the popover panel has been dragged at least once.
+    static func popoverOrigin() -> CGPoint? {
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: PreferencesKey.popoverOriginX) != nil,
+              defaults.object(forKey: PreferencesKey.popoverOriginY) != nil else {
+            return nil
+        }
+        return CGPoint(
+            x: defaults.double(forKey: PreferencesKey.popoverOriginX),
+            y: defaults.double(forKey: PreferencesKey.popoverOriginY)
+        )
+    }
+
+    static func setPopoverOrigin(_ point: CGPoint) {
+        UserDefaults.standard.set(point.x, forKey: PreferencesKey.popoverOriginX)
+        UserDefaults.standard.set(point.y, forKey: PreferencesKey.popoverOriginY)
     }
 
     private static func int(_ key: String, default defaultValue: Int) -> Int {

@@ -7,6 +7,40 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.10.0] - 2026-08-20
+
+### Adicionado
+
+- Modo Livre/Pomodoro no popover explica-se sozinho: segmentado a toda a
+  largura, legenda por baixo (com hora de fim estimada em Pomodoro),
+  configuração de Foco/Blocos visível antes de arrancar (ligada às
+  preferências já existentes), pré-visualização do visor e barras de
+  bloco, e um indicador "a contar" com ponto a pulsar.
+- Selecção de tarefa deixou de ser dois `Picker` dependentes: entra uma
+  célula de contexto ("A registar em") com um selector de busca próprio
+  (recentes, projectos, filtragem com destaque, criar tarefa — e criar
+  projecto na hora, se ainda não existir nenhum — sem sair do popover),
+  com navegação por teclado. Rodapé "Última: tarefa · Retomar" para
+  retomar num clique. Sessões soltas continuam possíveis, como sempre.
+- Cabeçalho do popover passa a mostrar o total de hoje (abre a janela
+  principal) e ganha um atalho directo para Preferências.
+- Clique direito no ícone da menu bar mostra "Abrir janela"/"Sair";
+  relançar a app pelo Spotlight enquanto já está a correr mostra a
+  janela principal.
+- O popover arrasta-se clicando numa área livre e memoriza a posição
+  para a próxima vez.
+- A janela principal memoriza posição e tamanho, e a barra lateral
+  memoriza a largura.
+
+### Corrigido
+
+- O `NSPopover` do popover podia abrir desalinhado/fora do ecrã depois de
+  o conteúdo mudar de altura (selector de tarefa, configuração do
+  Pomodoro), reposicionando-se com um tamanho desactualizado. Resolvido
+  substituindo-o por um `NSPanel` próprio, posicionado sempre a partir da
+  posição guardada (ou calculada de novo por baixo do ícone), nunca de
+  um valor antigo.
+
 ## [1.9.0] - 2026-08-20
 
 ### Adicionado
