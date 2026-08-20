@@ -7,6 +7,22 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.11.0] - 2026-08-20
+
+### Adicionado
+
+- Apagar projectos e tarefas (`ProjectsView`, `TasksBrowserView`), além das
+  sessões já suportadas. Continua a ser a única forma de os remover de
+  vez — arquivar continua reversível e é o caminho recomendado no dia a
+  dia. Apagar é em cascata: um projecto leva as suas tarefas, e cada
+  tarefa leva as suas próprias sessões, sempre com confirmação que diz
+  quantas tarefas/sessões vão ser apagadas antes de acontecer. Sem
+  lixeira — uma vez confirmado, é definitivo, tal como já era para
+  sessões.
+- Apagar sessão directamente pelo menu de contexto de qualquer lista onde
+  aparece (`SessionRow`, usado em Sessões, dentro de Projecto e dentro de
+  Tarefa) — antes só era possível abrindo a sessão no editor.
+
 ## [1.10.1] - 2026-08-20
 
 ### Corrigido

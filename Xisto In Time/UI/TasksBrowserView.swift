@@ -19,6 +19,7 @@ struct TasksBrowserView: View {
     @State private var showingNewTaskSheet = false
     @State private var newTaskTitle = ""
     @State private var newTaskProject: Project?
+    @State private var taskPendingDeletion: TaskItem?
 
     var body: some View {
         Group {
@@ -54,6 +55,9 @@ struct TasksBrowserView: View {
                                 task.archived.toggle()
                                 modelContext.saveAndCheckpoint()
                             }
+                            Button("Apagar", role: .destructive) {
+                                taskPendingDeletion = task
+                            }
                         }
                     }
                 }
@@ -61,6 +65,26 @@ struct TasksBrowserView: View {
             }
         }
         .navigationTitle("Tarefas")
+        .confirmationDialog(
+            "Apagar \"\(taskPendingDeletion?.title ?? "")\"?",
+            isPresented: Binding(
+                get: { taskPendingDeletion != nil },
+                set: { if !$0 { taskPendingDeletion = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Apagar tudo", role: .destructive) {
+                if let task = taskPendingDeletion {
+                    SessionStore.delete(task, in: modelContext)
+                }
+                taskPendingDeletion = nil
+            }
+            Button("Cancelar", role: .cancel) { taskPendingDeletion = nil }
+        } message: {
+            if let task = taskPendingDeletion {
+                Text(cascadingDeletionWarning(for: task))
+            }
+        }
         .toolbar {
             ToolbarItem {
                 Button {
@@ -83,5 +107,11 @@ struct TasksBrowserView: View {
                 showingNewTaskSheet = false
             }
         }
+    }
+
+    private func cascadingDeletionWarning(for task: TaskItem) -> String {
+        let sessionCount = SessionStore.sessions(for: task, context: modelContext).count
+        let sessionPart = sessionCount == 1 ? "1 sessão" : "\(sessionCount) sessões"
+        return "Isto apaga também \(sessionPart) associadas. Não pode ser desfeito."
     }
 }

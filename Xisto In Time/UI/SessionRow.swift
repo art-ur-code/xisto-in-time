@@ -16,8 +16,10 @@ struct SessionRow: View {
     var showsTask: Bool = true
     let path: Binding<NavigationPath>
 
+    @Environment(\.modelContext) private var modelContext
     @AppStorage(PreferencesKey.notePreviewSize)
     private var notePreviewSize = PreferencesDefault.notePreviewSize
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -64,6 +66,18 @@ struct SessionRow: View {
         .padding(.vertical, 2)
         .openOnDoubleClick {
             path.wrappedValue.append(SessionRoute(id: session.persistentModelID))
+        }
+        .contextMenu {
+            Button("Apagar sessão", role: .destructive) {
+                showingDeleteConfirmation = true
+            }
+        }
+        .confirmationDialog("Apagar esta sessão?", isPresented: $showingDeleteConfirmation, titleVisibility: .visible) {
+            Button("Apagar", role: .destructive) {
+                modelContext.delete(session)
+                modelContext.saveAndCheckpoint()
+            }
+            Button("Cancelar", role: .cancel) {}
         }
     }
 }

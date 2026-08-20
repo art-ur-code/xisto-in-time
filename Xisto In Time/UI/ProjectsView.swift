@@ -17,6 +17,7 @@ struct ProjectsView: View {
     @State private var showingNewProjectSheet = false
     @State private var newProjectName = ""
     @State private var newProjectColor = Color.accentColor
+    @State private var projectPendingDeletion: Project?
 
     var body: some View {
         Group {
@@ -49,6 +50,9 @@ struct ProjectsView: View {
                                 project.archived.toggle()
                                 modelContext.saveAndCheckpoint()
                             }
+                            Button("Apagar", role: .destructive) {
+                                projectPendingDeletion = project
+                            }
                         }
                     }
                 }
@@ -56,6 +60,26 @@ struct ProjectsView: View {
             }
         }
         .navigationTitle("Projectos")
+        .confirmationDialog(
+            "Apagar \"\(projectPendingDeletion?.name ?? "")\"?",
+            isPresented: Binding(
+                get: { projectPendingDeletion != nil },
+                set: { if !$0 { projectPendingDeletion = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Apagar tudo", role: .destructive) {
+                if let project = projectPendingDeletion {
+                    SessionStore.delete(project, in: modelContext)
+                }
+                projectPendingDeletion = nil
+            }
+            Button("Cancelar", role: .cancel) { projectPendingDeletion = nil }
+        } message: {
+            if let project = projectPendingDeletion {
+                Text(cascadingDeletionWarning(for: project))
+            }
+        }
         .toolbar {
             ToolbarItem {
                 Button {
@@ -78,5 +102,13 @@ struct ProjectsView: View {
                 showingNewProjectSheet = false
             }
         }
+    }
+
+    private func cascadingDeletionWarning(for project: Project) -> String {
+        let tasks = SessionStore.tasks(in: project, context: modelContext)
+        let sessionCount = tasks.reduce(0) { $0 + SessionStore.sessions(for: $1, context: modelContext).count }
+        let taskPart = tasks.count == 1 ? "1 tarefa" : "\(tasks.count) tarefas"
+        let sessionPart = sessionCount == 1 ? "1 sessão" : "\(sessionCount) sessões"
+        return "Isto apaga também \(taskPart) e \(sessionPart) associadas. Não pode ser desfeito."
     }
 }
