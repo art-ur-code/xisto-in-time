@@ -82,6 +82,7 @@ final class MenuBarController: NSObject {
     private func observeLabelWidth(timerEngine: TimerEngine) {
         withObservationTracking {
             _ = timerEngine.isRunning
+            _ = timerEngine.isPaused
             _ = timerEngine.currentTask?.project?.name
         } onChange: { [weak self] in
             DispatchQueue.main.async {

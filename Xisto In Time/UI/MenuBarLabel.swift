@@ -12,8 +12,8 @@ struct MenuBarLabel: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: "circle.dashed")
-                .symbolEffect(.pulse, isActive: timerEngine.isRunning)
+            Image(systemName: timerEngine.isPaused ? "pause.circle.fill" : "circle.dashed")
+                .symbolEffect(.pulse, isActive: timerEngine.isRunning && !timerEngine.isPaused)
             if timerEngine.isRunning {
                 let time = TimerEngine.format(timerEngine.remaining ?? timerEngine.elapsed)
                 if let projectName = timerEngine.currentTask?.project?.name {

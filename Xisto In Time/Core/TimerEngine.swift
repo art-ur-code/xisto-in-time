@@ -20,6 +20,7 @@ struct FinishedSession {
 @Observable
 final class TimerEngine {
     private(set) var isRunning = false
+    private(set) var isPaused = false
     private(set) var interrupted = false
     private(set) var elapsed: TimeInterval = 0
     private(set) var targetReached = false
@@ -32,6 +33,7 @@ final class TimerEngine {
     private var targetDuration: TimeInterval?
     private var pausedDuration: TimeInterval = 0
     private var sleepStartedAt: Date?
+    private var pauseStartedAt: Date?
     private var ticker: Timer?
     private var sleepObserver: NSObjectProtocol?
     private var wakeObserver: NSObjectProtocol?
@@ -64,11 +66,41 @@ final class TimerEngine {
         pausedDuration = 0
         sleepStartedAt = nil
         interrupted = false
+        isPaused = false
+        pauseStartedAt = nil
         elapsed = 0
         isRunning = true
         ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.updateElapsed()
         }
+    }
+
+    /// Suspends the count without ending the session. Idle detection is
+    /// gated on `!isPaused` (see `IdleMonitor`), so a deliberate pause is
+    /// never mistaken for inactivity.
+    func pause() {
+        guard isRunning, !isPaused else { return }
+        updateElapsed()
+        ticker?.invalidate()
+        ticker = nil
+        pauseStartedAt = Date()
+        isPaused = true
+    }
+
+    /// Resumes after `pause()`. Pushes `startedAt` forward by the length of
+    /// the pause — the same backdating trick `setElapsed` uses — so the
+    /// eventually-persisted `Session.startedAt`/`endedAt` excludes the
+    /// paused stretch without needing a separate stored field for it.
+    func resume() {
+        guard isRunning, isPaused, let pauseStartedAt else { return }
+        let gap = Date().timeIntervalSince(pauseStartedAt)
+        startedAt = startedAt?.addingTimeInterval(gap)
+        self.pauseStartedAt = nil
+        isPaused = false
+        ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            self?.updateElapsed()
+        }
+        updateElapsed()
     }
 
     func snoozeTarget() {
@@ -114,8 +146,15 @@ final class TimerEngine {
     @discardableResult
     func stop(endedAt overrideEndedAt: Date? = nil) -> FinishedSession? {
         guard isRunning, let startedAt else { return nil }
-        updateElapsed()
-        let endedAt = overrideEndedAt ?? Date()
+        let endedAt: Date
+        if isPaused, let pauseStartedAt {
+            // Work genuinely stopped when the pause began, not now — don't
+            // let the open pause gap leak into the recorded duration.
+            endedAt = overrideEndedAt ?? pauseStartedAt
+        } else {
+            updateElapsed()
+            endedAt = overrideEndedAt ?? Date()
+        }
         let finished = FinishedSession(
             startedAt: startedAt,
             endedAt: endedAt,
@@ -127,6 +166,8 @@ final class TimerEngine {
         ticker?.invalidate()
         ticker = nil
         isRunning = false
+        isPaused = false
+        pauseStartedAt = nil
         self.startedAt = nil
         sleepStartedAt = nil
         targetReached = false

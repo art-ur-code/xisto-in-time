@@ -61,6 +61,12 @@ struct SessionControlView: View {
                     .foregroundStyle(.secondary)
             }
 
+            if timerEngine.isPaused {
+                Label("Sessão em pausa", systemImage: "pause.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             if mode == .pomodoro && timerEngine.isRunning {
                 Text(pomodoroPhaseLabel)
                     .font(.caption)
@@ -100,22 +106,46 @@ struct SessionControlView: View {
             .padding(10)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
 
-            Button {
-                if timerEngine.isRunning {
-                    stopCurrentPhase()
-                } else {
-                    startCurrentPhase()
+            if timerEngine.isRunning {
+                HStack(spacing: 8) {
+                    Button {
+                        if timerEngine.isPaused {
+                            timerEngine.resume()
+                        } else {
+                            timerEngine.pause()
+                        }
+                    } label: {
+                        Label(
+                            timerEngine.isPaused ? "Retomar" : "Pausar",
+                            systemImage: timerEngine.isPaused ? "play.fill" : "pause.fill"
+                        )
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(accentColor)
+                    .controlSize(compact ? .regular : .large)
+
+                    Button {
+                        stopCurrentPhase()
+                    } label: {
+                        Label("Parar", systemImage: "stop.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                    .controlSize(compact ? .regular : .large)
                 }
-            } label: {
-                Label(
-                    timerEngine.isRunning ? "Parar" : "Começar",
-                    systemImage: timerEngine.isRunning ? "stop.fill" : "play.fill"
-                )
-                .frame(maxWidth: .infinity)
+            } else {
+                Button {
+                    startCurrentPhase()
+                } label: {
+                    Label("Começar", systemImage: "play.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(accentColor)
+                .controlSize(compact ? .regular : .large)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(timerEngine.isRunning ? .red : accentColor)
-            .controlSize(compact ? .regular : .large)
 
             if timerEngine.isRunning {
                 TextEditor(text: Binding(

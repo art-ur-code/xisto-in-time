@@ -7,6 +7,20 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.9.0] - 2026-08-20
+
+### Adicionado
+
+- Botão "Pausar"/"Retomar" a par de "Parar", em modo Livre e Pomodoro. Ao
+  retomar, o início da sessão é empurrado para a frente pelo tempo em
+  pausa (a mesma técnica já usada para editar o tempo decorrido à mão),
+  para o tempo parado não contar na duração gravada, sem precisar de um
+  campo novo no modelo de dados. Parar enquanto pausado termina a sessão
+  no momento em que a pausa começou. Pausar não marca a sessão como
+  interrompida (isso mantém-se reservado a sleep/wake) e a detecção de
+  idle não actua enquanto pausado. O glifo da menu bar deixa de pulsar e
+  muda de ícone enquanto a sessão está em pausa.
+
 ## [1.8.0] - 2026-08-20
 
 ### Alterado

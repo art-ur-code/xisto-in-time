@@ -35,7 +35,7 @@ final class IdleMonitor {
 
     private func poll() {
         guard Preferences.idleDetectionEnabled(),
-              let timerEngine, timerEngine.isRunning, timerEngine.currentKind == .work else {
+              let timerEngine, timerEngine.isRunning, !timerEngine.isPaused, timerEngine.currentKind == .work else {
             reset()
             return
         }
