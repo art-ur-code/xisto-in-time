@@ -29,8 +29,60 @@ extension ModelContext {
 enum StoreMaintenance {
     private static let maxBackups = 10
 
+    /// Dedicated subdirectory for all of Xisto's on-disk state. Without this,
+    /// SwiftData's plain default location (`Application Support/default.store`,
+    /// with no app-specific subfolder) is shared by every app on the machine
+    /// that also runs without a sandbox — a second, unrelated app landing on
+    /// the exact same path once silently replaced Xisto's entire database.
+    static func appDirectory() -> URL {
+        let directory = URL.applicationSupportDirectory.appending(path: "Xisto In Time", directoryHint: .isDirectory)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }
+
     private static func backupDirectory() -> URL {
-        URL.applicationSupportDirectory.appending(path: "Xisto Backups", directoryHint: .isDirectory)
+        appDirectory().appending(path: "Backups", directoryHint: .isDirectory)
+    }
+
+    /// One-time move from the old shared location into `appDirectory()`, for
+    /// installs that still have their store at the pre-isolation path. Only
+    /// migrates a store that actually looks like Xisto's own (has one of our
+    /// tables) — never adopts whatever unrelated app happens to be sitting on
+    /// the shared default path today.
+    static func migrateLegacyStoreIfNeeded() {
+        let legacyStoreURL = URL.applicationSupportDirectory.appending(path: "default.store")
+        let legacyBackupsURL = URL.applicationSupportDirectory.appending(path: "Xisto Backups", directoryHint: .isDirectory)
+        let newStoreURL = appDirectory().appending(path: "default.store")
+
+        guard !FileManager.default.fileExists(atPath: newStoreURL.path) else { return }
+        guard FileManager.default.fileExists(atPath: legacyStoreURL.path),
+              storeBelongsToXisto(at: legacyStoreURL) else { return }
+
+        for suffix in ["", "-wal", "-shm"] {
+            let source = URL(fileURLWithPath: legacyStoreURL.path + suffix)
+            guard FileManager.default.fileExists(atPath: source.path) else { continue }
+            try? FileManager.default.moveItem(at: source, to: URL(fileURLWithPath: newStoreURL.path + suffix))
+        }
+
+        if FileManager.default.fileExists(atPath: legacyBackupsURL.path) {
+            try? FileManager.default.moveItem(at: legacyBackupsURL, to: backupDirectory())
+        }
+    }
+
+    private static func storeBelongsToXisto(at url: URL) -> Bool {
+        var db: OpaquePointer?
+        guard sqlite3_open_v2(url.path, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
+            sqlite3_close(db)
+            return false
+        }
+        defer { sqlite3_close(db) }
+
+        var statement: OpaquePointer?
+        let sql = "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('ZSESSION', 'ZPROJECT', 'ZTASKITEM');"
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else { return false }
+        defer { sqlite3_finalize(statement) }
+
+        return sqlite3_step(statement) == SQLITE_ROW
     }
 
     /// Snapshots the previous store before this launch opens it. Runs while

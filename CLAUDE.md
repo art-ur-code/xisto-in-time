@@ -269,8 +269,15 @@ overlay.
    nem no `project.pbxproj` de forma geral. Estão configurados à mão.
    Se precisares de mudar algo aí, diz-me e eu faço na GUI.
 6. **Zero rede.** Sem HTTP, analytics, crash reporting ou sincronização.
-7. Dados em `~/Library/Application Support/` via o container por omissão do
-   SwiftData. Não escrever em `~/Documents`.
+7. Dados em `~/Library/Application Support/Xisto In Time/default.store` —
+   **nunca** no caminho genérico por omissão do SwiftData
+   (`Application Support/default.store`, sem subpasta). Sem sandbox, essa
+   pasta genérica é partilhada por todas as apps sem sandbox da máquina; já
+   aconteceu outra app aterrar exactamente nesse caminho e apagar por
+   completo a base de dados do Xisto (v1.10.1, 2026-08-20). `StoreMaintenance`
+   migra automaticamente um `default.store` antigo encontrado no caminho
+   genérico, mas só se o esquema for reconhecidamente do Xisto. Não escrever
+   em `~/Documents`.
 8. Preferências em `UserDefaults` via `@AppStorage`, nunca no SwiftData.
 9. Sendo LSUIElement, abrir a janela de Settings exige `NSApp.activate(...)`
    antes, senão aparece atrás de tudo. Usar a `Settings` scene padrão.

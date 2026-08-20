@@ -7,6 +7,23 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.10.1] - 2026-08-20
+
+### Corrigido
+
+- Perda total da base de dados por colisão de caminho: `default.store` vivia
+  em `~/Library/Application Support/default.store`, o caminho genérico que o
+  SwiftData usa por omissão quando não se indica uma subpasta própria da
+  app. Sem sandbox, essa pasta é partilhada por todas as apps não
+  sandboxed da máquina — outra app (esquema `APIRequestModel`, nada a ver
+  com o Xisto) aterrou no mesmo ficheiro e o SwiftData recriou-o do zero,
+  apagando projectos, tarefas e sessões. Os dados foram recuperados a
+  partir dos backups rotativos introduzidos em 1.6.0. Agora o Xisto vive
+  em `~/Library/Application Support/Xisto In Time/`, isolado; instalações
+  antigas migram automaticamente o `default.store` existente (e a pasta de
+  backups) para lá no primeiro arranque, só se o esquema for
+  reconhecidamente do Xisto.
+
 ## [1.10.0] - 2026-08-20
 
 ### Adicionado

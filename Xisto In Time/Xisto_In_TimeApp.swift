@@ -25,7 +25,8 @@ struct Xisto_In_TimeApp: App {
 
     init() {
         let schema = Schema([Session.self, TaskItem.self, Project.self])
-        let storeURL = URL.applicationSupportDirectory.appending(path: "default.store")
+        StoreMaintenance.migrateLegacyStoreIfNeeded()
+        let storeURL = StoreMaintenance.appDirectory().appending(path: "default.store")
         StoreMaintenance.backupBeforeOpening(storeURL: storeURL)
         do {
             sharedModelContainer = try ModelContainer(for: schema, configurations: [ModelConfiguration(url: storeURL)])
