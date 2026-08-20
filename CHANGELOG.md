@@ -7,6 +7,16 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.7.0] - 2026-08-20
+
+### Adicionado
+
+- Botão "Começar sessão desta tarefa" no topo do `TaskDetailView`, com o
+  projecto e a tarefa já pré-preenchidos. Se já houver uma sessão a decorrer
+  (livre ou pomodoro), esta é parada e gravada automaticamente antes de
+  arrancar a nova. Se a sessão a decorrer já for desta tarefa, o botão fica
+  desactivado.
+
 ## [1.6.0] - 2026-08-19
 
 ### Adicionado

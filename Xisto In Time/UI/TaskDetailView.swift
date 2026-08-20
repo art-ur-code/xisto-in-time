@@ -12,6 +12,8 @@ struct TaskDetailView: View {
     let task: TaskItem
     let path: Binding<NavigationPath>
     @Environment(\.modelContext) private var modelContext
+    @Environment(TimerEngine.self) private var timerEngine
+    @Environment(PomodoroController.self) private var pomodoro
     @Query private var sessions: [Session]
     @Query(filter: #Predicate<Project> { !$0.archived }, sort: \Project.name)
     private var projects: [Project]
@@ -40,8 +42,31 @@ struct TaskDetailView: View {
         return ReportBuilder.weeklyReport(sessions: sessions, days: days).grandTotal
     }
 
+    private var isRunningThisTask: Bool {
+        timerEngine.isRunning && timerEngine.currentTask?.persistentModelID == task.persistentModelID
+    }
+
     var body: some View {
         List {
+            Section {
+                Button {
+                    startSession()
+                } label: {
+                    Label(
+                        isRunningThisTask ? "Sessão desta tarefa a decorrer" : "Começar sessão desta tarefa",
+                        systemImage: isRunningThisTask ? "record.circle.fill" : "play.fill"
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(task.project?.color ?? .accentColor)
+                .controlSize(.large)
+                .disabled(isRunningThisTask)
+                .listRowInsets(EdgeInsets())
+                .padding(.vertical, 6)
+                .padding(.horizontal, 4)
+            }
+
             Section {
                 HStack(spacing: 12) {
                     statCard(title: "Hoje", total: todayTotal)
@@ -98,6 +123,13 @@ struct TaskDetailView: View {
                 showingEditSheet = false
             }
         }
+    }
+
+    private func startSession() {
+        if timerEngine.isRunning {
+            pomodoro.cancel()
+        }
+        timerEngine.start(kind: .work, task: task)
     }
 
     private func statCard(title: String, total: TimeInterval) -> some View {
