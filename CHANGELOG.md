@@ -7,6 +7,20 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.8.0] - 2026-08-20
+
+### Alterado
+
+- O controlo de sessão completo saiu da aba "Sessões" (secção "Nova
+  sessão") e passou a viver, em versão compacta mas com a mesma
+  funcionalidade (modo Livre/Pomodoro, projecto, tarefa, nota), na barra
+  lateral da janela principal, sempre visível por cima da linha antes de
+  "Preferências". `SessionControlView` ganhou um parâmetro `compact` para
+  isto; o popover continua com a versão completa, inalterada.
+- A aba "Sessões" ganhou, no lugar do controlo antigo, um card de
+  estatísticas Hoje/Esta semana, igual ao já existente em Projectos e
+  Tarefas.
+
 ## [1.7.0] - 2026-08-20
 
 ### Adicionado

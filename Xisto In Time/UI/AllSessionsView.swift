@@ -14,13 +14,25 @@ struct AllSessionsView: View {
     @Query(sort: \Session.startedAt, order: .reverse) private var sessions: [Session]
     @State private var showingNewSessionEditor = false
 
+    private var todayTotal: TimeInterval {
+        ReportBuilder.dailyReport(sessions: sessions, day: Date()).total
+    }
+
+    private var weekTotal: TimeInterval {
+        let days = ReportBuilder.weekDays(containing: Date(), showWeekend: true)
+        return ReportBuilder.weeklyReport(sessions: sessions, days: days).grandTotal
+    }
+
     var body: some View {
         List {
-            Section("Nova sessão") {
-                SessionControlView()
-                    .listRowInsets(EdgeInsets())
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+            Section {
+                HStack(spacing: 12) {
+                    statCard(title: "Hoje", total: todayTotal)
+                    statCard(title: "Esta semana", total: weekTotal)
+                }
+                .listRowInsets(EdgeInsets())
+                .padding(.vertical, 6)
+                .padding(.horizontal, 4)
             }
 
             Section("Histórico") {
@@ -53,5 +65,19 @@ struct AllSessionsView: View {
             }
             .frame(width: 420, height: 520)
         }
+    }
+
+    private func statCard(title: String, total: TimeInterval) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text("\(ReportBuilder.formatHoursMinutes(total)) (\(ReportBuilder.formatDecimalHours(total)))")
+                .font(.title3.bold())
+                .monospacedDigit()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 }

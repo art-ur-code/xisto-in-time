@@ -36,6 +36,12 @@ struct SessionControlView: View {
     @State private var elapsedEditText = ""
     @FocusState private var elapsedFieldFocused: Bool
 
+    private let compact: Bool
+
+    init(compact: Bool = false) {
+        self.compact = compact
+    }
+
     private var tasksForSelectedProject: [TaskItem] {
         guard let selectedProject else { return [] }
         return tasks.filter { $0.project?.persistentModelID == selectedProject.persistentModelID }
@@ -46,7 +52,7 @@ struct SessionControlView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: compact ? 8 : 14) {
             timerCard
 
             if timerEngine.interrupted {
@@ -109,7 +115,7 @@ struct SessionControlView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(timerEngine.isRunning ? .red : accentColor)
-            .controlSize(.large)
+            .controlSize(compact ? .regular : .large)
 
             if timerEngine.isRunning {
                 TextEditor(text: Binding(
@@ -117,20 +123,20 @@ struct SessionControlView: View {
                     set: { timerEngine.updateNote($0) }
                 ))
                 .font(.callout)
-                .frame(height: 70)
+                .frame(height: compact ? 50 : 70)
                 .scrollContentBackground(.hidden)
                 .padding(6)
                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
             }
         }
-        .frame(maxWidth: 420, alignment: .leading)
+        .frame(maxWidth: compact ? .infinity : 420, alignment: .leading)
     }
 
     private var timerCard: some View {
         Group {
             if isEditingElapsed {
                 TextField("H:MM:SS", text: $elapsedEditText)
-                    .font(.system(.largeTitle, design: .monospaced, weight: .semibold))
+                    .font(.system(compact ? .title2 : .largeTitle, design: .monospaced, weight: .semibold))
                     .multilineTextAlignment(.center)
                     .textFieldStyle(.plain)
                     .focused($elapsedFieldFocused)
@@ -141,7 +147,7 @@ struct SessionControlView: View {
                     }
             } else {
                 Text(TimerEngine.format(displayedInterval))
-                    .font(.system(.largeTitle, design: .monospaced, weight: .semibold))
+                    .font(.system(compact ? .title2 : .largeTitle, design: .monospaced, weight: .semibold))
                     .help("Clica para editar o tempo decorrido")
                     .onTapGesture {
                         elapsedEditText = TimerEngine.format(displayedInterval)
@@ -151,7 +157,7 @@ struct SessionControlView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
+        .padding(.vertical, compact ? 8 : 14)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(accentColor.opacity(timerEngine.isRunning ? 0.16 : 0.08))

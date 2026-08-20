@@ -118,6 +118,10 @@ struct MainWindowView: View {
                     .tag(section)
                 }
 
+                SessionControlView(compact: true)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+
                 Divider()
 
                 SettingsLink {
