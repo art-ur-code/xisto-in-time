@@ -33,6 +33,7 @@ struct TaskPickerView: View {
 
     @State private var showingCreateTaskSheet = false
     @State private var newTaskTitle = ""
+    @State private var newTaskLink = ""
     @State private var newTaskProject: Project?
 
     @FocusState private var searchFieldFocused: Bool
@@ -82,10 +83,11 @@ struct TaskPickerView: View {
         }
         .onChange(of: browsingProject) { _, _ in highlightedIndex = 0 }
         .sheet(isPresented: $showingCreateTaskSheet) {
-            TaskFormSheet(title: "Nova tarefa", taskTitle: $newTaskTitle, project: $newTaskProject, projects: projects) {
+            TaskFormSheet(title: "Nova tarefa", taskTitle: $newTaskTitle, link: $newTaskLink, project: $newTaskProject, projects: projects) {
                 let trimmed = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty, let newTaskProject else { return }
-                let task = TaskItem(title: trimmed, project: newTaskProject)
+                let trimmedLink = newTaskLink.trimmingCharacters(in: .whitespacesAndNewlines)
+                let task = TaskItem(title: trimmed, link: trimmedLink.isEmpty ? nil : trimmedLink, project: newTaskProject)
                 modelContext.insert(task)
                 modelContext.saveAndCheckpoint()
                 showingCreateTaskSheet = false
@@ -299,6 +301,7 @@ struct TaskPickerView: View {
 
     private func startCreatingTask() {
         newTaskTitle = searchQuery
+        newTaskLink = ""
         newTaskProject = browsingProject ?? projects.first
         showingCreateTaskSheet = true
     }

@@ -7,6 +7,16 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.13.0] - 2026-08-25
+
+### Adicionado
+
+- Listas de Projectos e Tarefas redesenhadas como cards maiores, no mesmo
+  estilo visual da lista de Sessões.
+- Novo campo opcional "Link da tarefa" (URL) em cada tarefa, editável no
+  formulário de criar/editar; quando é um URL válido, aparece um botão para
+  abrir directamente a partir do card na lista de Tarefas.
+
 ## [1.12.0] - 2026-08-25
 
 ### Adicionado

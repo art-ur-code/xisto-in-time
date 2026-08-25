@@ -20,6 +20,7 @@ struct TaskDetailView: View {
 
     @State private var showingEditSheet = false
     @State private var editTitle = ""
+    @State private var editLink = ""
     @State private var editProject: Project?
 
     init(task: TaskItem, path: Binding<NavigationPath>) {
@@ -106,16 +107,19 @@ struct TaskDetailView: View {
             ToolbarItem {
                 Button("Editar") {
                     editTitle = task.title
+                    editLink = task.link ?? ""
                     editProject = task.project
                     showingEditSheet = true
                 }
             }
         }
         .sheet(isPresented: $showingEditSheet) {
-            TaskFormSheet(title: "Editar tarefa", taskTitle: $editTitle, project: $editProject, projects: projects) {
+            TaskFormSheet(title: "Editar tarefa", taskTitle: $editTitle, link: $editLink, project: $editProject, projects: projects) {
                 let trimmed = editTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty, let editProject else { return }
+                let trimmedLink = editLink.trimmingCharacters(in: .whitespacesAndNewlines)
                 task.title = trimmed
+                task.link = trimmedLink.isEmpty ? nil : trimmedLink
                 task.project = editProject
                 modelContext.saveAndCheckpoint()
                 showingEditSheet = false

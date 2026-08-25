@@ -18,6 +18,7 @@ struct TasksBrowserView: View {
 
     @State private var showingNewTaskSheet = false
     @State private var newTaskTitle = ""
+    @State private var newTaskLink = ""
     @State private var newTaskProject: Project?
     @State private var taskPendingDeletion: TaskItem?
 
@@ -28,40 +29,10 @@ struct TasksBrowserView: View {
             } else {
                 List {
                     ForEach(tasks) { task in
-                        HStack(spacing: 10) {
-                            if let project = task.project {
-                                Circle()
-                                    .fill(project.color)
-                                    .frame(width: 10, height: 10)
-                            }
-                            VStack(alignment: .leading) {
-                                Text(task.title)
-                                    .foregroundStyle(task.archived ? .secondary : .primary)
-                                    .strikethrough(task.archived)
-                                if let project = task.project {
-                                    Text(project.name)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            Spacer()
-                            RowDisclosureChevron()
-                        }
-                        .openOnDoubleClick {
-                            path.wrappedValue.append(TaskRoute(id: task.persistentModelID))
-                        }
-                        .contextMenu {
-                            Button(task.archived ? "Reactivar" : "Arquivar") {
-                                task.archived.toggle()
-                                modelContext.saveAndCheckpoint()
-                            }
-                            Button("Apagar", role: .destructive) {
-                                taskPendingDeletion = task
-                            }
-                        }
+                        taskCard(task)
                     }
                 }
-                .listStyle(.inset(alternatesRowBackgrounds: true))
+                .listStyle(.inset(alternatesRowBackgrounds: false))
             }
         }
         .navigationTitle("Tarefas")
@@ -89,6 +60,7 @@ struct TasksBrowserView: View {
             ToolbarItem {
                 Button {
                     newTaskTitle = ""
+                    newTaskLink = ""
                     newTaskProject = projects.first
                     showingNewTaskSheet = true
                 } label: {
@@ -97,14 +69,62 @@ struct TasksBrowserView: View {
             }
         }
         .sheet(isPresented: $showingNewTaskSheet) {
-            TaskFormSheet(title: "Nova tarefa", taskTitle: $newTaskTitle, project: $newTaskProject, projects: projects) {
+            TaskFormSheet(title: "Nova tarefa", taskTitle: $newTaskTitle, link: $newTaskLink, project: $newTaskProject, projects: projects) {
                 let trimmed = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty, let newTaskProject else { return }
-                modelContext.insert(TaskItem(title: trimmed, project: newTaskProject))
+                let trimmedLink = newTaskLink.trimmingCharacters(in: .whitespacesAndNewlines)
+                modelContext.insert(TaskItem(title: trimmed, link: trimmedLink.isEmpty ? nil : trimmedLink, project: newTaskProject))
                 modelContext.saveAndCheckpoint()
                 showingNewTaskSheet = false
             } onCancel: {
                 showingNewTaskSheet = false
+            }
+        }
+    }
+
+    private func taskCard(_ task: TaskItem) -> some View {
+        HStack(spacing: 10) {
+            if let project = task.project {
+                Circle()
+                    .fill(project.color)
+                    .frame(width: 12, height: 12)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(task.title)
+                    .font(.headline)
+                    .foregroundStyle(task.archived ? .secondary : .primary)
+                    .strikethrough(task.archived)
+                if let project = task.project {
+                    Text(project.name)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            if let url = task.linkURL {
+                Link(destination: url) {
+                    Image(systemName: "link")
+                }
+                .buttonStyle(.bordered)
+                .tint(task.project?.color ?? .accentColor)
+                .help(task.link ?? "")
+            }
+            RowDisclosureChevron()
+        }
+        .padding(14)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+        .listRowSeparator(.hidden)
+        .openOnDoubleClick {
+            path.wrappedValue.append(TaskRoute(id: task.persistentModelID))
+        }
+        .contextMenu {
+            Button(task.archived ? "Reactivar" : "Arquivar") {
+                task.archived.toggle()
+                modelContext.saveAndCheckpoint()
+            }
+            Button("Apagar", role: .destructive) {
+                taskPendingDeletion = task
             }
         }
     }

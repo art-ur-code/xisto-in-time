@@ -26,37 +26,10 @@ struct ProjectsView: View {
             } else {
                 List {
                     ForEach(projects) { project in
-                        HStack(spacing: 10) {
-                            Circle()
-                                .fill(project.color)
-                                .frame(width: 12, height: 12)
-                            Text(project.name)
-                                .foregroundStyle(project.archived ? .secondary : .primary)
-                                .strikethrough(project.archived)
-                            Spacer()
-                            if project.archived {
-                                Text("Arquivado")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            RowDisclosureChevron()
-                        }
-                        .padding(.vertical, 4)
-                        .openOnDoubleClick {
-                            path.wrappedValue.append(ProjectRoute(id: project.persistentModelID))
-                        }
-                        .contextMenu {
-                            Button(project.archived ? "Reactivar" : "Arquivar") {
-                                project.archived.toggle()
-                                modelContext.saveAndCheckpoint()
-                            }
-                            Button("Apagar", role: .destructive) {
-                                projectPendingDeletion = project
-                            }
-                        }
+                        projectCard(project)
                     }
                 }
-                .listStyle(.inset(alternatesRowBackgrounds: true))
+                .listStyle(.inset(alternatesRowBackgrounds: false))
             }
         }
         .navigationTitle("Projectos")
@@ -100,6 +73,41 @@ struct ProjectsView: View {
                 showingNewProjectSheet = false
             } onCancel: {
                 showingNewProjectSheet = false
+            }
+        }
+    }
+
+    private func projectCard(_ project: Project) -> some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(project.color)
+                .frame(width: 14, height: 14)
+            Text(project.name)
+                .font(.headline)
+                .foregroundStyle(project.archived ? .secondary : .primary)
+                .strikethrough(project.archived)
+            Spacer()
+            if project.archived {
+                Text("Arquivado")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            RowDisclosureChevron()
+        }
+        .padding(14)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+        .listRowSeparator(.hidden)
+        .openOnDoubleClick {
+            path.wrappedValue.append(ProjectRoute(id: project.persistentModelID))
+        }
+        .contextMenu {
+            Button(project.archived ? "Reactivar" : "Arquivar") {
+                project.archived.toggle()
+                modelContext.saveAndCheckpoint()
+            }
+            Button("Apagar", role: .destructive) {
+                projectPendingDeletion = project
             }
         }
     }

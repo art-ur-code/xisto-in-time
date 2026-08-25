@@ -13,6 +13,7 @@ import SwiftData
 struct TaskFormSheet: View {
     let title: String
     @Binding var taskTitle: String
+    @Binding var link: String
     @Binding var project: Project?
     let projects: [Project]
     let onSave: () -> Void
@@ -27,6 +28,7 @@ struct TaskFormSheet: View {
         NavigationStack {
             Form {
                 TextField("Título", text: $taskTitle)
+                TextField("Link da tarefa", text: $link)
                 HStack {
                     Picker("Projecto", selection: $project) {
                         if projects.isEmpty {
