@@ -10,6 +10,18 @@ import Observation
 import SwiftData
 import SwiftUI
 
+/// A plain `NSPanel` with `.borderless, .nonactivatingPanel` reports
+/// `canBecomeKey`/`canBecomeMain` as `false` — no property on the instance
+/// changes that, it has to be overridden on a subclass. Without this, text
+/// fields hosted inside (SwiftUI or not) never actually receive typed
+/// keystrokes: SwiftUI still assigns a field editor and shows it as
+/// `firstResponder`, which is why clicking looks like it focused the field,
+/// but the window itself never becomes key, so no character ever lands.
+private final class KeyablePanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 /// Owns the actual `NSStatusItem`. Left click toggles the popover panel — the
 /// popover's own "Hoje" header opens the main window, and Preferências/Sair
 /// live in the main window's sidebar. Right click shows a small context menu
@@ -44,14 +56,14 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         }
         mainWindowController = windowController
 
-        let panel = NSPanel(
+        let panel = KeyablePanel(
             contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
         panel.isFloatingPanel = true
-        panel.level = .popUpMenu
+        panel.level = .floating
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false

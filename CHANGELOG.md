@@ -7,6 +7,21 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.14.1] - 2026-08-25
+
+### Corrigido
+
+- Não era possível escrever em nenhum campo de texto do popover da barra de
+  menu (nota, pesquisa de tarefa, edição do tempo decorrido). O painel do
+  popover é um `NSPanel` simples com `.borderless, .nonactivatingPanel`, que
+  nesta configuração reporta `canBecomeKey`/`canBecomeMain` como `false` —
+  o SwiftUI continuava a atribuir um field editor e a mostrá-lo como
+  `firstResponder` (por isso parecia focado ao clicar), mas a janela nunca
+  chegava a ficar `key`, por isso nenhuma tecla premida entrava no campo.
+  Resolvido com uma subclasse de `NSPanel` que sobrepõe essas duas
+  propriedades para `true` — a única forma de as alterar, já que não há
+  propriedade equivalente numa instância normal.
+
 ## [1.14.0] - 2026-08-25
 
 ### Adicionado
