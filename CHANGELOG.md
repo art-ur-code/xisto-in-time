@@ -7,6 +7,20 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.14.0] - 2026-08-25
+
+### Adicionado
+
+- Sessões e tarefas dentro de um Projecto, e sessões dentro de uma Tarefa,
+  passam a seguir o mesmo padrão de card já usado nas listas principais:
+  tarefas com link/arquivar/apagar, sessões agrupadas por dia com o botão
+  "Começar". Estas listas partilham agora os mesmos componentes
+  (`SessionRow`, `TaskCard`) e a mesma lógica de agrupamento por dia
+  (`ReportBuilder.groupedByDay`, `SessionDayHeader`) que as listas principais
+  "Sessões" e "Tarefas", que mantêm o aspecto inalterado.
+- Lista principal de Tarefas agrupada por projecto (ordem alfabética, "Sem
+  projecto" no fim quando aplicável).
+
 ## [1.13.0] - 2026-08-25
 
 ### Adicionado

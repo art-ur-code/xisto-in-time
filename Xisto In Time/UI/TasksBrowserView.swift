@@ -8,6 +8,12 @@
 import SwiftUI
 import SwiftData
 
+private struct ProjectTaskGroup: Identifiable {
+    let id: String
+    let project: Project?
+    let tasks: [TaskItem]
+}
+
 struct TasksBrowserView: View {
     let path: Binding<NavigationPath>
 
@@ -20,7 +26,22 @@ struct TasksBrowserView: View {
     @State private var newTaskTitle = ""
     @State private var newTaskLink = ""
     @State private var newTaskProject: Project?
-    @State private var taskPendingDeletion: TaskItem?
+
+    private var groupedTasks: [ProjectTaskGroup] {
+        var groups: [String: (project: Project?, tasks: [TaskItem])] = [:]
+        for task in tasks {
+            let key = task.project.map { "p:\($0.persistentModelID)" } ?? "none"
+            var entry = groups[key] ?? (task.project, [])
+            entry.tasks.append(task)
+            groups[key] = entry
+        }
+        return groups.map { key, value in
+            ProjectTaskGroup(id: key, project: value.project, tasks: value.tasks.sorted { $0.title < $1.title })
+        }.sorted { lhs, rhs in
+            guard let lp = lhs.project, let rp = rhs.project else { return lhs.project != nil }
+            return lp.name < rp.name
+        }
+    }
 
     var body: some View {
         Group {
@@ -28,34 +49,20 @@ struct TasksBrowserView: View {
                 ContentUnavailableView("Ainda sem tarefas", systemImage: "checklist", description: Text("Cria a primeira com o botão + em cima."))
             } else {
                 List {
-                    ForEach(tasks) { task in
-                        taskCard(task)
+                    ForEach(groupedTasks) { group in
+                        Section {
+                            ForEach(group.tasks) { task in
+                                TaskCard(task: task, showsProject: false, path: path)
+                            }
+                        } header: {
+                            projectHeader(for: group)
+                        }
                     }
                 }
                 .listStyle(.inset(alternatesRowBackgrounds: false))
             }
         }
         .navigationTitle("Tarefas")
-        .confirmationDialog(
-            "Apagar \"\(taskPendingDeletion?.title ?? "")\"?",
-            isPresented: Binding(
-                get: { taskPendingDeletion != nil },
-                set: { if !$0 { taskPendingDeletion = nil } }
-            ),
-            titleVisibility: .visible
-        ) {
-            Button("Apagar tudo", role: .destructive) {
-                if let task = taskPendingDeletion {
-                    SessionStore.delete(task, in: modelContext)
-                }
-                taskPendingDeletion = nil
-            }
-            Button("Cancelar", role: .cancel) { taskPendingDeletion = nil }
-        } message: {
-            if let task = taskPendingDeletion {
-                Text(cascadingDeletionWarning(for: task))
-            }
-        }
         .toolbar {
             ToolbarItem {
                 Button {
@@ -82,56 +89,20 @@ struct TasksBrowserView: View {
         }
     }
 
-    private func taskCard(_ task: TaskItem) -> some View {
-        HStack(spacing: 10) {
-            if let project = task.project {
-                Circle()
-                    .fill(project.color)
-                    .frame(width: 12, height: 12)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(task.title)
-                    .font(.headline)
-                    .foregroundStyle(task.archived ? .secondary : .primary)
-                    .strikethrough(task.archived)
-                if let project = task.project {
-                    Text(project.name)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+    private func projectHeader(for group: ProjectTaskGroup) -> some View {
+        HStack {
+            if let project = group.project {
+                Circle().fill(project.color).frame(width: 10, height: 10)
+                Text(project.name).font(.subheadline.bold())
+            } else {
+                Text("Sem projecto").font(.subheadline.bold()).foregroundStyle(.secondary)
             }
             Spacer()
-            if let url = task.linkURL {
-                Link(destination: url) {
-                    Image(systemName: "link")
-                }
-                .buttonStyle(.bordered)
-                .tint(task.project?.color ?? .accentColor)
-                .help(task.link ?? "")
-            }
-            RowDisclosureChevron()
+            Text(group.tasks.count == 1 ? "1 tarefa" : "\(group.tasks.count) tarefas")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .padding(14)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-        .listRowSeparator(.hidden)
-        .openOnDoubleClick {
-            path.wrappedValue.append(TaskRoute(id: task.persistentModelID))
-        }
-        .contextMenu {
-            Button(task.archived ? "Reactivar" : "Arquivar") {
-                task.archived.toggle()
-                modelContext.saveAndCheckpoint()
-            }
-            Button("Apagar", role: .destructive) {
-                taskPendingDeletion = task
-            }
-        }
-    }
-
-    private func cascadingDeletionWarning(for task: TaskItem) -> String {
-        let sessionCount = SessionStore.sessions(for: task, context: modelContext).count
-        let sessionPart = sessionCount == 1 ? "1 sessão" : "\(sessionCount) sessões"
-        return "Isto apaga também \(sessionPart) associadas. Não pode ser desfeito."
+        .textCase(nil)
+        .padding(.vertical, 4)
     }
 }

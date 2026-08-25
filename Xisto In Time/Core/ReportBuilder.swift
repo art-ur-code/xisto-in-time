@@ -20,6 +20,17 @@ struct DailyReport {
     let buckets: [Bucket]
 }
 
+struct DaySessionGroup: Identifiable {
+    let day: Date
+    let sessions: [Session]
+
+    var id: Date { day }
+
+    var total: TimeInterval {
+        sessions.reduce(0) { $0 + $1.endedAt.timeIntervalSince($1.startedAt) }
+    }
+}
+
 struct WeeklyReport {
     struct TaskRow: Identifiable {
         let id: String
@@ -85,6 +96,17 @@ enum ReportBuilder {
             .sorted { $0.total > $1.total }
 
         return DailyReport(sessions: daySessions, total: total, buckets: bucketList)
+    }
+
+    /// Groups sessions by calendar day, most recent day first, sessions within
+    /// a day most recent first — the day-section layout shared by every
+    /// sessions list (`AllSessionsView`, and the nested ones in
+    /// `ProjectDetailView`/`TaskDetailView`).
+    static func groupedByDay(sessions: [Session], calendar: Calendar = .current) -> [DaySessionGroup] {
+        let byDay = Dictionary(grouping: sessions) { calendar.startOfDay(for: $0.startedAt) }
+        return byDay.keys.sorted(by: >).map { day in
+            DaySessionGroup(day: day, sessions: byDay[day]!.sorted { $0.startedAt > $1.startedAt })
+        }
     }
 
     static func weeklyReport(sessions: [Session], days: [Date], calendar: Calendar = .current) -> WeeklyReport {

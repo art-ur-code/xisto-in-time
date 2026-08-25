@@ -78,19 +78,25 @@ struct TaskDetailView: View {
                 .padding(.horizontal, 4)
             }
 
-            Section("Sessões") {
-                if sessions.isEmpty {
+            if sessions.isEmpty {
+                Section("Sessões") {
                     Text("Ainda sem sessões")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                } else {
-                    ForEach(sessions) { session in
-                        SessionRow(session: session, showsTask: false, path: path)
+                }
+            } else {
+                ForEach(ReportBuilder.groupedByDay(sessions: sessions)) { group in
+                    Section {
+                        ForEach(group.sessions) { session in
+                            SessionRow(session: session, showsTask: false, path: path)
+                        }
+                    } header: {
+                        SessionDayHeader(group: group)
                     }
                 }
             }
         }
-        .listStyle(.inset(alternatesRowBackgrounds: true))
+        .listStyle(.inset(alternatesRowBackgrounds: false))
         .navigationTitle(task.title)
         .toolbar {
             ToolbarItem(placement: .principal) {

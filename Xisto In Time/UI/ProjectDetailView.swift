@@ -63,33 +63,30 @@ struct ProjectDetailView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(tasks) { task in
-                        HStack {
-                            Text(task.title)
-                                .foregroundStyle(task.archived ? .secondary : .primary)
-                                .strikethrough(task.archived)
-                            Spacer()
-                            RowDisclosureChevron()
-                        }
-                        .openOnDoubleClick {
-                            path.wrappedValue.append(TaskRoute(id: task.persistentModelID))
-                        }
+                        TaskCard(task: task, showsProject: false, path: path)
                     }
                 }
             }
 
-            Section("Sessões") {
-                if sessions.isEmpty {
+            if sessions.isEmpty {
+                Section("Sessões") {
                     Text("Ainda sem sessões")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                } else {
-                    ForEach(sessions) { session in
-                        SessionRow(session: session, path: path)
+                }
+            } else {
+                ForEach(ReportBuilder.groupedByDay(sessions: sessions)) { group in
+                    Section {
+                        ForEach(group.sessions) { session in
+                            SessionRow(session: session, path: path)
+                        }
+                    } header: {
+                        SessionDayHeader(group: group)
                     }
                 }
             }
         }
-        .listStyle(.inset(alternatesRowBackgrounds: true))
+        .listStyle(.inset(alternatesRowBackgrounds: false))
         .navigationTitle(project.name)
         .toolbar {
             ToolbarItem {
