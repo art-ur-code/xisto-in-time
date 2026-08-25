@@ -7,6 +7,18 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.12.0] - 2026-08-25
+
+### Adicionado
+
+- Lista de Sessões agrupada por dia: cada dia tem o seu cabeçalho, com dia da
+  semana, data, número de sessões e total desse dia.
+- Linhas da lista de Sessões redesenhadas como cards maiores, mais fáceis de
+  ler, mantendo toda a informação anterior (nota, sessão interrompida, etc.).
+- Botão "Começar" em cada sessão da lista, para arrancar de imediato uma nova
+  sessão em modo livre com a mesma tarefa — pára automaticamente a sessão a
+  decorrer, se houver uma.
+
 ## [1.11.0] - 2026-08-20
 
 ### Adicionado
