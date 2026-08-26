@@ -27,6 +27,11 @@ struct CalendarWeekView: View {
     private let gutterWidth: CGFloat = 44
     private let headerHeight: CGFloat = 22
 
+    /// Hoisted so the 30s refresh interval isn't restarted on every `body`
+    /// re-evaluation — `Timer.publish(...).autoconnect()` inline would create
+    /// (and reconnect) a fresh publisher on every render.
+    private let ticker = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
+
     private var days: [Date] {
         ReportBuilder.weekDays(containing: referenceDate, showWeekend: showWeekend)
     }
@@ -47,23 +52,28 @@ struct CalendarWeekView: View {
         VStack(alignment: .leading, spacing: 12) {
             weekNavigator
 
-            ScrollView([.vertical, .horizontal]) {
-                HStack(alignment: .top, spacing: 0) {
-                    timeGutter
-                    HStack(alignment: .top, spacing: 1) {
-                        ForEach(days, id: \.self) { day in
-                            VStack(spacing: 0) {
-                                dayHeader(for: day)
-                                dayColumn(for: day)
+            ScrollViewReader { proxy in
+                ScrollView([.vertical, .horizontal]) {
+                    HStack(alignment: .top, spacing: 0) {
+                        timeGutter
+                        HStack(alignment: .top, spacing: 1) {
+                            ForEach(days, id: \.self) { day in
+                                VStack(spacing: 0) {
+                                    dayHeader(for: day)
+                                    dayColumn(for: day)
+                                }
                             }
                         }
                     }
+                }
+                .onAppear {
+                    proxy.scrollTo(7, anchor: .top)
                 }
             }
         }
         .padding()
         .navigationTitle("Calendário")
-        .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { date in
+        .onReceive(ticker) { date in
             runningTick = date
         }
     }
@@ -98,6 +108,7 @@ struct CalendarWeekView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .frame(width: gutterWidth, height: hourHeight, alignment: .top)
+                    .id(hour)
             }
         }
     }
@@ -117,6 +128,7 @@ struct CalendarWeekView: View {
                     hourHeight: hourHeight,
                     columnWidth: dayColumnWidth,
                     snapMinutes: snapMinutes,
+                    days: days,
                     overlapCheck: { start, end, excluding in
                         SessionStore.overlappingSession(startedAt: start, endedAt: end, excluding: excluding, in: allSessions)
                     },

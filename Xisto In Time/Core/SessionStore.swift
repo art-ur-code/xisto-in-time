@@ -85,6 +85,10 @@ enum SessionStore {
     }
 
     static func rescheduleSession(_ session: Session, startedAt: Date, endedAt: Date, in context: ModelContext) {
+        // Safety net: every known caller already clamps/validates before
+        // calling this, but this is a shared Core API now — never let a
+        // future caller's bad clamping corrupt a session's ordering.
+        guard endedAt > startedAt else { return }
         session.startedAt = startedAt
         session.endedAt = endedAt
         session.editedAt = Date()

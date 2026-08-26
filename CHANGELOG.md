@@ -7,6 +7,22 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.16.0] - 2026-08-26
+
+### Adicionado
+
+- Vista semanal de Calendário: novo separador "Calendário", primeiro na
+  barra lateral e seleccionado por omissão, com uma grelha semanal das
+  sessões (colunas por dia, horas na vertical). As sessões arrastam-se
+  para mudar de dia/hora e redimensionam-se pelas extremidades para
+  ajustar início/fim, com aviso de sobreposição e confirmação para
+  sessões com mais de 12 horas — a edição continua sempre possível pelo
+  editor de sessões, agora acessível também a partir de um duplo clique
+  no bloco.
+- Preferência "Encaixar (snap)" no painel de Calendário das Preferências,
+  para arredondar o arrasto/redimensionamento a um intervalo fixo de
+  minutos.
+
 ## [1.15.0] - 2026-08-26
 
 ### Adicionado

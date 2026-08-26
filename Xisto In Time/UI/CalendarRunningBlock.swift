@@ -25,16 +25,24 @@ struct CalendarRunningBlock: View {
         max(4, CalendarLayoutMath.yOffset(for: now, day: day, hourHeight: hourHeight) - y)
     }
 
+    /// Mirrors `CalendarSessionBlock.fillColor`'s `.break` special-case so a
+    /// running pause doesn't visibly flip from project/accent color to gray
+    /// the instant it's saved as a real session.
+    private var strokeColor: Color {
+        kind == .break ? .gray : (projectColor ?? .accentColor)
+    }
+
     var body: some View {
         RoundedRectangle(cornerRadius: 4)
-            .fill((projectColor ?? .accentColor).opacity(0.35))
+            .fill(kind == .break ? Color.gray.opacity(0.35) : (projectColor ?? .accentColor).opacity(0.35))
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
-                    .strokeBorder(projectColor ?? .accentColor, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
+                    .strokeBorder(strokeColor, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
             )
             .overlay(alignment: .topLeading) {
                 Text(taskTitle ?? (kind == .break ? "Pausa a decorrer" : "A decorrer…"))
                     .font(.caption2)
+                    .lineLimit(1)
                     .padding(3)
             }
             .padding(.horizontal, 2)

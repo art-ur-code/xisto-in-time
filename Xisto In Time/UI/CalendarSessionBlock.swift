@@ -11,6 +11,7 @@ struct CalendarSessionBlock: View {
     let hourHeight: CGFloat
     let columnWidth: CGFloat
     let snapMinutes: Int
+    let days: [Date]
     let overlapCheck: (Date, Date, PersistentIdentifier?) -> Session?
     let onCommit: (Session, Date, Date) -> Void
     let onOpenEditor: (Session) -> Void
@@ -74,21 +75,21 @@ struct CalendarSessionBlock: View {
                     .padding(3)
             }
             .frame(width: max(20, laneWidth - 2), height: max(4, baseHeight - resizeTopTranslation + resizeBottomTranslation))
+            .overlay(alignment: .top) {
+                if segment.isSessionStart {
+                    resizeHandle(gesture: topResizeGesture, blockHeight: max(4, baseHeight - resizeTopTranslation + resizeBottomTranslation))
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if segment.isSessionEnd {
+                    resizeHandle(gesture: bottomResizeGesture, blockHeight: max(4, baseHeight - resizeTopTranslation + resizeBottomTranslation))
+                }
+            }
             .offset(x: CGFloat(segment.lane) * laneWidth + 2 + (canMoveAcrossDays ? moveTranslation.width : 0), y: baseY + resizeTopTranslation + moveTranslation.height)
             .onTapGesture(count: 2) {
                 onOpenEditor(segment.session)
             }
             .gesture(moveGesture)
-            .overlay(alignment: .top) {
-                if segment.isSessionStart {
-                    resizeHandle(gesture: topResizeGesture)
-                }
-            }
-            .overlay(alignment: .bottom) {
-                if segment.isSessionEnd {
-                    resizeHandle(gesture: bottomResizeGesture)
-                }
-            }
             .alert("Sobreposição de sessões", isPresented: $showingOverlapAlert) {
                 Button("Cancelar", role: .cancel) { resetTranslation() }
                 Button("Continuar mesmo assim") { checkDurationThenCommit() }
@@ -117,23 +118,42 @@ struct CalendarSessionBlock: View {
     }
 
     /// Translation → candidate (start, end), snapped and clamped to never land in the future.
+    ///
+    /// Horizontal movement operates on the *visible* column index, not a raw
+    /// calendar-day delta: when weekends are hidden, "one column right" of
+    /// Friday must land on next Monday, not the (invisible) Saturday, and the
+    /// target day is always clamped into the currently-visible range so a
+    /// drag can never place a session on a day the calendar isn't showing.
     private func candidateRange() -> (Date, Date) {
         let calendar = Calendar.current
-        let dayDelta = canMoveAcrossDays ? Int((moveTranslation.width / columnWidth).rounded()) : 0
+        let columnDelta = canMoveAcrossDays ? Int((moveTranslation.width / columnWidth).rounded()) : 0
         let timeDeltaSeconds = Double(moveTranslation.height / hourHeight) * 3600
         let duration = segment.session.endedAt.timeIntervalSince(segment.session.startedAt)
 
         let shifted = segment.session.startedAt.addingTimeInterval(timeDeltaSeconds)
-        let dayShifted = calendar.date(byAdding: .day, value: dayDelta, to: shifted) ?? shifted
+
+        let currentIndex = days.firstIndex(where: { calendar.isDate($0, inSameDayAs: segment.day) }) ?? 0
+        let targetIndex = max(0, min(days.count - 1, currentIndex + columnDelta))
+        let targetDay = days.isEmpty ? segment.day : days[targetIndex]
+
+        let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: shifted)
+        let dayShifted = calendar.date(
+            bySettingHour: timeComponents.hour ?? 0,
+            minute: timeComponents.minute ?? 0,
+            second: timeComponents.second ?? 0,
+            of: targetDay
+        ) ?? shifted
+
         let snapped = CalendarLayoutMath.snap(dayShifted, toMinutes: snapMinutes, calendar: calendar)
         let clampedStart = min(snapped, Date().addingTimeInterval(-duration))
         return (clampedStart, clampedStart.addingTimeInterval(duration))
     }
 
-    private func resizeHandle(gesture: some Gesture) -> some View {
-        Rectangle()
+    private func resizeHandle(gesture: some Gesture, blockHeight: CGFloat) -> some View {
+        let handleHeight = max(2, min(8, blockHeight / 3))
+        return Rectangle()
             .fill(Color.clear)
-            .frame(height: 8)
+            .frame(height: handleHeight)
             .contentShape(Rectangle())
             .overlay(Capsule().fill(Color.primary.opacity(0.25)).frame(width: 24, height: 3))
             .gesture(gesture)
