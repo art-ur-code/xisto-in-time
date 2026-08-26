@@ -7,6 +7,13 @@ import Combine
 import SwiftData
 import SwiftUI
 
+private struct CalendarScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 struct CalendarWeekView: View {
     @Binding var path: NavigationPath
 
@@ -21,6 +28,7 @@ struct CalendarWeekView: View {
 
     @State private var referenceDate = Date()
     @State private var runningTick = Date()
+    @State private var horizontalOffset: CGFloat = 0
 
     private let hourHeight: CGFloat = 56
     private let dayColumnWidth: CGFloat = 130
@@ -49,26 +57,34 @@ struct CalendarWeekView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            weekNavigator
+        ScrollViewReader { proxy in
+            VStack(alignment: .leading, spacing: 12) {
+                weekNavigator(proxy: proxy)
+                fixedHeaderRow
 
-            ScrollViewReader { proxy in
                 ScrollView([.vertical, .horizontal]) {
                     HStack(alignment: .top, spacing: 0) {
                         timeGutter
                         HStack(alignment: .top, spacing: 1) {
                             ForEach(days, id: \.self) { day in
-                                VStack(spacing: 0) {
-                                    dayHeader(for: day)
-                                    dayColumn(for: day)
-                                }
+                                dayColumn(for: day)
                             }
                         }
+                        .background(
+                            GeometryReader { geo in
+                                Color.clear.preference(
+                                    key: CalendarScrollOffsetKey.self,
+                                    value: geo.frame(in: .named("calendarScroll")).minX
+                                )
+                            }
+                        )
                     }
                 }
-                .onAppear {
-                    proxy.scrollTo(7, anchor: .top)
-                }
+                .coordinateSpace(name: "calendarScroll")
+                .onPreferenceChange(CalendarScrollOffsetKey.self) { horizontalOffset = $0 - gutterWidth }
+            }
+            .onAppear {
+                scrollToNow(proxy: proxy)
             }
         }
         .padding()
@@ -78,7 +94,7 @@ struct CalendarWeekView: View {
         }
     }
 
-    private var weekNavigator: some View {
+    private func weekNavigator(proxy: ScrollViewProxy) -> some View {
         HStack {
             Button {
                 referenceDate = Calendar.current.date(byAdding: .day, value: -7, to: referenceDate) ?? referenceDate
@@ -95,14 +111,50 @@ struct CalendarWeekView: View {
             } label: {
                 Image(systemName: "chevron.right")
             }
-            Button("Esta semana") { referenceDate = Date() }
-                .font(.caption)
+            Button("Agora") {
+                referenceDate = Date()
+                Task { @MainActor in
+                    scrollToNow(proxy: proxy)
+                }
+            }
+            .font(.caption)
         }
+    }
+
+    /// Scrolls to today's current-time marker (both axes at once, since it's
+    /// positioned inside today's column) when today is in the visible week;
+    /// falls back to a fixed ~07:00 anchor when viewing a week without today.
+    private func scrollToNow(proxy: ScrollViewProxy) {
+        if days.contains(where: { Calendar.current.isDateInToday($0) }) {
+            withAnimation {
+                proxy.scrollTo("now", anchor: .center)
+            }
+        } else {
+            proxy.scrollTo(7, anchor: .top)
+        }
+    }
+
+    /// Day-name headers, kept outside the scrollable grid so they stay fixed
+    /// while scrolling vertically. Tracks the grid's horizontal scroll offset
+    /// (via `CalendarScrollOffsetKey`) so it still moves in sync with the day
+    /// columns when scrolling horizontally.
+    private var fixedHeaderRow: some View {
+        HStack(spacing: 0) {
+            Color.clear.frame(width: gutterWidth)
+            HStack(alignment: .top, spacing: 1) {
+                ForEach(days, id: \.self) { day in
+                    dayHeader(for: day)
+                        .frame(width: dayColumnWidth)
+                }
+            }
+            .offset(x: horizontalOffset)
+        }
+        .frame(height: headerHeight)
+        .clipped()
     }
 
     private var timeGutter: some View {
         VStack(spacing: 0) {
-            Color.clear.frame(height: headerHeight)
             ForEach(0..<24, id: \.self) { hour in
                 Text(String(format: "%02d:00", hour))
                     .font(.caption2)
@@ -150,6 +202,14 @@ struct CalendarWeekView: View {
                     now: runningTick,
                     hourHeight: hourHeight
                 )
+            }
+            if Calendar.current.isDateInToday(day) {
+                Rectangle()
+                    .fill(Color.red)
+                    .frame(height: 1.5)
+                    .offset(y: CalendarLayoutMath.yOffset(for: runningTick, day: day, hourHeight: hourHeight))
+                    .allowsHitTesting(false)
+                    .id("now")
             }
         }
         .frame(width: dayColumnWidth, height: hourHeight * 24)

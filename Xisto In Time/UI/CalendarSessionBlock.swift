@@ -20,9 +20,8 @@ struct CalendarSessionBlock: View {
     @State private var resizeTopTranslation: CGFloat = 0
     @State private var resizeBottomTranslation: CGFloat = 0
     @State private var isOverlapping = false
-    @State private var showingOverlapAlert = false
-    @State private var overlapDescription = ""
-    @State private var showingLongDurationAlert = false
+    @State private var showingConfirmAlert = false
+    @State private var confirmMessage = ""
     @State private var pendingStart = Date()
     @State private var pendingEnd = Date()
 
@@ -90,17 +89,11 @@ struct CalendarSessionBlock: View {
                 onOpenEditor(segment.session)
             }
             .gesture(moveGesture)
-            .alert("Sobreposição de sessões", isPresented: $showingOverlapAlert) {
+            .alert("Confirmar alteração", isPresented: $showingConfirmAlert) {
                 Button("Cancelar", role: .cancel) { resetTranslation() }
-                Button("Continuar mesmo assim") { checkDurationThenCommit() }
+                Button("Confirmar") { commit() }
             } message: {
-                Text("Esta sessão sobrepõe-se a: \(overlapDescription)")
-            }
-            .alert("Sessão muito longa", isPresented: $showingLongDurationAlert) {
-                Button("Cancelar", role: .cancel) { resetTranslation() }
-                Button("Continuar mesmo assim") { commit() }
-            } message: {
-                Text("Esta sessão passaria a durar mais de 12 horas. Tens a certeza?")
+                Text(confirmMessage)
             }
     }
 
@@ -211,20 +204,32 @@ struct CalendarSessionBlock: View {
         }
         pendingStart = newStart
         pendingEnd = newEnd
-        if let overlapping = overlapCheck(newStart, newEnd, segment.session.persistentModelID) {
-            overlapDescription = SessionStore.describe(overlapping)
-            showingOverlapAlert = true
-            return
-        }
-        checkDurationThenCommit()
+        confirmMessage = buildConfirmMessage(newStart: newStart, newEnd: newEnd)
+        showingConfirmAlert = true
     }
 
-    private func checkDurationThenCommit() {
-        if pendingEnd.timeIntervalSince(pendingStart) > 12 * 3600 {
-            showingLongDurationAlert = true
-            return
+    /// "De: ... / Para: ..." plus any overlap/duration warning — shown on
+    /// every drag before it commits, so nothing is ever written silently.
+    private func buildConfirmMessage(newStart: Date, newEnd: Date) -> String {
+        var lines = [
+            "De: \(Self.formatRange(segment.session.startedAt, segment.session.endedAt))",
+            "Para: \(Self.formatRange(newStart, newEnd))"
+        ]
+        if let overlapping = overlapCheck(newStart, newEnd, segment.session.persistentModelID) {
+            lines.append("⚠️ Sobrepõe-se a: \(SessionStore.describe(overlapping))")
         }
-        commit()
+        if newEnd.timeIntervalSince(newStart) > 12 * 3600 {
+            lines.append("⚠️ Passaria a durar mais de 12 horas.")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private static func formatRange(_ start: Date, _ end: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDate(start, inSameDayAs: end) {
+            return "\(start.formatted(date: .abbreviated, time: .shortened)) – \(end.formatted(date: .omitted, time: .shortened))"
+        }
+        return "\(start.formatted(date: .abbreviated, time: .shortened)) – \(end.formatted(date: .abbreviated, time: .shortened))"
     }
 
     private func commit() {
