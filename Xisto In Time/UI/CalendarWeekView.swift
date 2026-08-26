@@ -3,6 +3,7 @@
 //  Xisto In Time
 //
 
+import Combine
 import SwiftData
 import SwiftUI
 
@@ -10,6 +11,7 @@ struct CalendarWeekView: View {
     @Binding var path: NavigationPath
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(TimerEngine.self) private var timerEngine
     @Query(sort: \Session.startedAt) private var allSessions: [Session]
 
     @AppStorage(PreferencesKey.reportsShowWeekend)
@@ -18,6 +20,7 @@ struct CalendarWeekView: View {
     private var snapMinutes = PreferencesDefault.calendarSnapMinutes
 
     @State private var referenceDate = Date()
+    @State private var runningTick = Date()
 
     private let hourHeight: CGFloat = 56
     private let dayColumnWidth: CGFloat = 130
@@ -60,6 +63,9 @@ struct CalendarWeekView: View {
         }
         .padding()
         .navigationTitle("Calendário")
+        .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { date in
+            runningTick = date
+        }
     }
 
     private var weekNavigator: some View {
@@ -120,6 +126,17 @@ struct CalendarWeekView: View {
                     onOpenEditor: { session in
                         path.append(SessionRoute(id: session.persistentModelID))
                     }
+                )
+            }
+            if timerEngine.isRunning, let startedAt = timerEngine.currentStartedAt, Calendar.current.isDate(startedAt, inSameDayAs: day) {
+                CalendarRunningBlock(
+                    day: day,
+                    startedAt: startedAt,
+                    kind: timerEngine.currentKind,
+                    taskTitle: timerEngine.currentTask?.title,
+                    projectColor: timerEngine.currentTask?.project?.color,
+                    now: runningTick,
+                    hourHeight: hourHeight
                 )
             }
         }
