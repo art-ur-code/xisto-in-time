@@ -62,26 +62,38 @@ struct CalendarWeekView: View {
                 weekNavigator(proxy: proxy)
                 fixedHeaderRow
 
-                ScrollView([.vertical, .horizontal]) {
+                // Two separate single-axis ScrollViews (nested), not one
+                // combined `ScrollView([.vertical, .horizontal])` — on macOS,
+                // `ScrollViewReader.scrollTo` does not reliably scroll a
+                // two-axis ScrollView (confirmed empirically: chevron/button
+                // taps register fine, but programmatic scrollTo silently
+                // no-ops on the combined scroll view regardless of anchor).
+                // Vertical scroll wraps everything (so `scrollTo` targets
+                // the hour gutter reliably); horizontal scroll is nested and
+                // only covers the day columns, tracked via `horizontalOffset`
+                // so `fixedHeaderRow` stays in sync.
+                ScrollView(.vertical) {
                     HStack(alignment: .top, spacing: 0) {
                         timeGutter
-                        HStack(alignment: .top, spacing: 1) {
-                            ForEach(days, id: \.self) { day in
-                                dayColumn(for: day)
+                        ScrollView(.horizontal) {
+                            HStack(alignment: .top, spacing: 1) {
+                                ForEach(days, id: \.self) { day in
+                                    dayColumn(for: day)
+                                }
                             }
+                            .background(
+                                GeometryReader { geo in
+                                    Color.clear.preference(
+                                        key: CalendarScrollOffsetKey.self,
+                                        value: geo.frame(in: .named("calendarHorizontalScroll")).minX
+                                    )
+                                }
+                            )
                         }
-                        .background(
-                            GeometryReader { geo in
-                                Color.clear.preference(
-                                    key: CalendarScrollOffsetKey.self,
-                                    value: geo.frame(in: .named("calendarScroll")).minX
-                                )
-                            }
-                        )
+                        .coordinateSpace(name: "calendarHorizontalScroll")
+                        .onPreferenceChange(CalendarScrollOffsetKey.self) { horizontalOffset = $0 }
                     }
                 }
-                .coordinateSpace(name: "calendarScroll")
-                .onPreferenceChange(CalendarScrollOffsetKey.self) { horizontalOffset = $0 - gutterWidth }
             }
             .onAppear {
                 scrollToNow(proxy: proxy)
@@ -113,25 +125,19 @@ struct CalendarWeekView: View {
             }
             Button("Agora") {
                 referenceDate = Date()
-                Task { @MainActor in
-                    scrollToNow(proxy: proxy)
-                }
+                scrollToNow(proxy: proxy)
             }
             .font(.caption)
         }
     }
 
-    /// Scrolls to today's current-time marker (both axes at once, since it's
-    /// positioned inside today's column) when today is in the visible week;
-    /// falls back to a fixed ~07:00 anchor when viewing a week without today.
+    /// Scrolls to the current hour's row in the (outer, vertical-only) time
+    /// gutter — a direct child of the vertical `ScrollView`, which is what
+    /// makes this reliable; the current-time row lives inside the nested
+    /// horizontal `ScrollView` and isn't a safe `scrollTo` target.
     private func scrollToNow(proxy: ScrollViewProxy) {
-        if days.contains(where: { Calendar.current.isDateInToday($0) }) {
-            withAnimation {
-                proxy.scrollTo("now", anchor: .center)
-            }
-        } else {
-            proxy.scrollTo(7, anchor: .top)
-        }
+        let hour = Calendar.current.component(.hour, from: Date())
+        proxy.scrollTo(hour, anchor: .top)
     }
 
     /// Day-name headers, kept outside the scrollable grid so they stay fixed
@@ -209,7 +215,6 @@ struct CalendarWeekView: View {
                     .frame(height: 1.5)
                     .offset(y: CalendarLayoutMath.yOffset(for: runningTick, day: day, hourHeight: hourHeight))
                     .allowsHitTesting(false)
-                    .id("now")
             }
         }
         .frame(width: dayColumnWidth, height: hourHeight * 24)
