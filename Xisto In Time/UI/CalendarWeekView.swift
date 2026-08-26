@@ -9,6 +9,7 @@ import SwiftUI
 struct CalendarWeekView: View {
     @Binding var path: NavigationPath
 
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Session.startedAt) private var allSessions: [Session]
 
     @AppStorage(PreferencesKey.reportsShowWeekend)
@@ -109,6 +110,13 @@ struct CalendarWeekView: View {
                     segment: segment,
                     hourHeight: hourHeight,
                     columnWidth: dayColumnWidth,
+                    snapMinutes: snapMinutes,
+                    overlapCheck: { start, end, excluding in
+                        SessionStore.overlappingSession(startedAt: start, endedAt: end, excluding: excluding, in: allSessions)
+                    },
+                    onCommit: { session, start, end in
+                        SessionStore.rescheduleSession(session, startedAt: start, endedAt: end, in: modelContext)
+                    },
                     onOpenEditor: { session in
                         path.append(SessionRoute(id: session.persistentModelID))
                     }
