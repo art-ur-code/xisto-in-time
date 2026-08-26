@@ -64,4 +64,38 @@ enum SessionStore {
         }
         context.delete(task)
     }
+
+    // MARK: - Overlap / reschedule
+    //
+    // Shared by SessionEditorView (manual edit) and the calendar week view
+    // (drag to move/resize) — same overlap rule, one place.
+
+    static func overlappingSession(
+        startedAt: Date,
+        endedAt: Date,
+        excluding excludedID: PersistentIdentifier?,
+        in sessions: [Session]
+    ) -> Session? {
+        sessions.first { candidate in
+            if let excludedID, candidate.persistentModelID == excludedID {
+                return false
+            }
+            return startedAt < candidate.endedAt && endedAt > candidate.startedAt
+        }
+    }
+
+    static func rescheduleSession(_ session: Session, startedAt: Date, endedAt: Date, in context: ModelContext) {
+        session.startedAt = startedAt
+        session.endedAt = endedAt
+        session.editedAt = Date()
+        context.saveAndCheckpoint()
+    }
+
+    static func describe(_ session: Session) -> String {
+        let range = "\(session.startedAt.formatted(date: .abbreviated, time: .shortened)) – \(session.endedAt.formatted(date: .omitted, time: .shortened))"
+        if let title = session.task?.title {
+            return "\(range) (\(title))"
+        }
+        return "\(range) (sem atribuição)"
+    }
 }

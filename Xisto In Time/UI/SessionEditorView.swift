@@ -151,8 +151,8 @@ struct SessionEditorView: View {
             return
         }
 
-        if let overlapping = findOverlappingSession() {
-            overlapDescription = describe(overlapping)
+        if let overlapping = SessionStore.overlappingSession(startedAt: startedAt, endedAt: endedAt, excluding: existingSession?.persistentModelID, in: allSessions) {
+            overlapDescription = SessionStore.describe(overlapping)
             showingOverlapAlert = true
             return
         }
@@ -194,28 +194,11 @@ struct SessionEditorView: View {
         dismiss()
     }
 
-    private func findOverlappingSession() -> Session? {
-        allSessions.first { candidate in
-            if let existingSession, candidate.persistentModelID == existingSession.persistentModelID {
-                return false
-            }
-            return startedAt < candidate.endedAt && endedAt > candidate.startedAt
-        }
-    }
-
     private func projectLabel(_ project: Project) -> some View {
         Label {
             Text(project.name)
         } icon: {
             Circle().fill(project.color).frame(width: 10, height: 10)
         }
-    }
-
-    private func describe(_ session: Session) -> String {
-        let range = "\(session.startedAt.formatted(date: .abbreviated, time: .shortened)) – \(session.endedAt.formatted(date: .omitted, time: .shortened))"
-        if let title = session.task?.title {
-            return "\(range) (\(title))"
-        }
-        return "\(range) (sem atribuição)"
     }
 }
