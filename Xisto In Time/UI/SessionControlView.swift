@@ -86,18 +86,12 @@ struct SessionControlView: View {
 
             if !timerEngine.isRunning {
                 VStack(alignment: .leading, spacing: 6) {
-                    Picker("Modo", selection: $mode) {
-                        ForEach(TimerMode.allCases) { m in
-                            Text(m.label).tag(m)
+                    modeSelector
+                        .onChange(of: mode) { _, newMode in
+                            if newMode == .pomodoro {
+                                pomodoroWorkOverride = nil
+                            }
                         }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
-                    .onChange(of: mode) { _, newMode in
-                        if newMode == .pomodoro {
-                            pomodoroWorkOverride = nil
-                        }
-                    }
 
                     Text(modeLegend)
                         .font(.caption)
@@ -110,10 +104,6 @@ struct SessionControlView: View {
             }
 
             contextCell
-
-            if !timerEngine.isRunning {
-                lastTaskFooter
-            }
 
             if timerEngine.isRunning {
                 HStack(spacing: 8) {
@@ -154,6 +144,10 @@ struct SessionControlView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(accentColor)
                 .controlSize(compact ? .regular : .large)
+            }
+
+            if !timerEngine.isRunning {
+                lastTaskFooter
             }
 
             if timerEngine.isRunning {
@@ -210,6 +204,32 @@ struct SessionControlView: View {
                 .fill(accentColor.opacity(timerEngine.isRunning ? 0.16 : 0.08))
         )
         .foregroundStyle(timerEngine.isRunning ? accentColor : .primary)
+    }
+
+    /// Two independent, fully-rounded toggle buttons with a gap between them —
+    /// deliberately not `.pickerStyle(.segmented)`, whose native macOS look
+    /// joins the segments into one piece (round only at the outer ends,
+    /// straight where they meet).
+    private var modeSelector: some View {
+        HStack(spacing: 8) {
+            ForEach(TimerMode.allCases) { m in
+                Button {
+                    mode = m
+                } label: {
+                    Text(m.label)
+                        .font(.system(size: 15, weight: m == mode ? .bold : .regular))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(m == mode ? accentColor : Color.gray.opacity(0.18))
+                )
+                .foregroundStyle(m == mode ? .white : .primary)
+            }
+        }
     }
 
     private var runningIndicatorRow: some View {
