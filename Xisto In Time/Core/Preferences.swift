@@ -17,6 +17,7 @@ enum PreferencesKey {
     static let idleThresholdMinutes = "idleThresholdMinutes"
     static let idleResolutionMode = "idleResolutionMode"
     static let reportsShowWeekend = "reportsShowWeekend"
+    static let calendarSnapMinutes = "calendarSnapMinutes"
     static let notePreviewSize = "notePreviewSize"
     static let lastSessionMode = "lastSessionMode"
     static let sidebarWidth = "sidebarWidth"
@@ -34,6 +35,7 @@ enum PreferencesDefault {
     static let idleThresholdMinutes = 10
     static let idleResolutionMode = IdleResolutionMode.ask
     static let reportsShowWeekend = true
+    static let calendarSnapMinutes = 15
     static let notePreviewSize = NotePreviewSize.oneLine
     static let lastSessionMode = TimerMode.free
     static let sidebarWidth = 190.0
