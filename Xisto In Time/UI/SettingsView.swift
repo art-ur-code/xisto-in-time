@@ -30,6 +30,11 @@ struct SettingsView: View {
                     .tabItem {
                         Label("Relatórios", systemImage: "chart.bar")
                     }
+
+                CalendarSettingsPane()
+                    .tabItem {
+                        Label("Calendário", systemImage: "calendar")
+                    }
             }
 
             Divider()
@@ -159,6 +164,26 @@ private struct ReportsSettingsPane: View {
         Form {
             Section {
                 Toggle("Mostrar fim-de-semana na vista semanal", isOn: $reportsShowWeekend)
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+private struct CalendarSettingsPane: View {
+    @AppStorage(PreferencesKey.calendarSnapMinutes)
+    private var calendarSnapMinutes = PreferencesDefault.calendarSnapMinutes
+
+    private let options = [5, 15, 30]
+
+    var body: some View {
+        Form {
+            Section {
+                Picker("Encaixar (snap) ao arrastar", selection: $calendarSnapMinutes) {
+                    ForEach(options, id: \.self) { minutes in
+                        Text("\(minutes) min").tag(minutes)
+                    }
+                }
             }
         }
         .formStyle(.grouped)
