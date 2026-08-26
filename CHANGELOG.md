@@ -7,6 +7,25 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.15.0] - 2026-08-26
+
+### Adicionado
+
+- Botão "Criar tarefa" dentro da secção "Tarefas" nos detalhes do projecto,
+  já com o projecto seleccionado por omissão (mesmo formulário partilhado
+  por Tarefas/Popover).
+- Ícone da aplicação (`AppIcon.appiconset`), até agora vazio.
+
+### Alterado
+
+- Detalhes do projecto: cabeçalhos de "Tarefas" e "Sessões" passam a ter o
+  mesmo estilo (título + contagem), e o bloco de Sessões ganha um cabeçalho
+  próprio acima dos agrupamentos por dia — antes as sessões seguiam
+  directamente da lista de tarefas sem nenhuma divisão visual clara entre
+  os dois blocos.
+- A app deixa de ser `LSUIElement`: passa a ter ícone no Dock e a aparecer
+  no Cmd+Tab como uma app normal.
+
 ## [1.14.1] - 2026-08-25
 
 ### Corrigido

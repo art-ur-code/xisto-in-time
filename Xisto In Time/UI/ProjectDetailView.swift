@@ -15,10 +15,17 @@ struct ProjectDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var tasks: [TaskItem]
     @Query(sort: \Session.startedAt, order: .reverse) private var allSessions: [Session]
+    @Query(filter: #Predicate<Project> { !$0.archived }, sort: \Project.name)
+    private var projects: [Project]
 
     @State private var showingEditSheet = false
     @State private var editName = ""
     @State private var editColor = Color.accentColor
+
+    @State private var showingNewTaskSheet = false
+    @State private var newTaskTitle = ""
+    @State private var newTaskLink = ""
+    @State private var newTaskProject: Project?
 
     init(project: Project, path: Binding<NavigationPath>) {
         self.project = project
@@ -56,7 +63,18 @@ struct ProjectDetailView: View {
                 .padding(.horizontal, 4)
             }
 
-            Section("Tarefas") {
+            Section {
+                Button {
+                    newTaskTitle = ""
+                    newTaskLink = ""
+                    newTaskProject = project
+                    showingNewTaskSheet = true
+                } label: {
+                    Label("Criar tarefa", systemImage: "plus.circle")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.accentColor)
+
                 if tasks.isEmpty {
                     Text("Ainda sem tarefas")
                         .font(.caption)
@@ -66,22 +84,31 @@ struct ProjectDetailView: View {
                         TaskCard(task: task, showsProject: false, path: path)
                     }
                 }
+            } header: {
+                blockHeader(title: "Tarefas", count: tasks.count, singular: "tarefa", plural: "tarefas")
             }
 
             if sessions.isEmpty {
-                Section("Sessões") {
+                Section {
                     Text("Ainda sem sessões")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                } header: {
+                    blockHeader(title: "Sessões", count: 0, singular: "sessão", plural: "sessões")
                 }
             } else {
-                ForEach(ReportBuilder.groupedByDay(sessions: sessions)) { group in
+                ForEach(Array(ReportBuilder.groupedByDay(sessions: sessions).enumerated()), id: \.element.id) { index, group in
                     Section {
                         ForEach(group.sessions) { session in
                             SessionRow(session: session, path: path)
                         }
                     } header: {
-                        SessionDayHeader(group: group)
+                        VStack(alignment: .leading, spacing: 6) {
+                            if index == 0 {
+                                blockHeader(title: "Sessões", count: sessions.count, singular: "sessão", plural: "sessões")
+                            }
+                            SessionDayHeader(group: group)
+                        }
                     }
                 }
             }
@@ -109,6 +136,32 @@ struct ProjectDetailView: View {
                 showingEditSheet = false
             }
         }
+        .sheet(isPresented: $showingNewTaskSheet) {
+            TaskFormSheet(title: "Nova tarefa", taskTitle: $newTaskTitle, link: $newTaskLink, project: $newTaskProject, projects: projects) {
+                let trimmed = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty, let newTaskProject else { return }
+                let trimmedLink = newTaskLink.trimmingCharacters(in: .whitespacesAndNewlines)
+                modelContext.insert(TaskItem(title: trimmed, link: trimmedLink.isEmpty ? nil : trimmedLink, project: newTaskProject))
+                modelContext.saveAndCheckpoint()
+                showingNewTaskSheet = false
+            } onCancel: {
+                showingNewTaskSheet = false
+            }
+        }
+    }
+
+    private func blockHeader(title: String, count: Int, singular: String, plural: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.subheadline.bold())
+                .foregroundStyle(.primary)
+            Spacer()
+            Text(count == 1 ? "1 \(singular)" : "\(count) \(plural)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .textCase(nil)
+        .padding(.vertical, 4)
     }
 
     private func statCard(title: String, total: TimeInterval) -> some View {

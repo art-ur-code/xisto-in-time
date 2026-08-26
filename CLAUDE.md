@@ -47,8 +47,7 @@ open "$HOME/Applications/Xisto In Time.app"
 ```
 
 Isto deixa a app localizável pelo Spotlight (Cmd+Espaço, "Xisto") como uma
-app instalada normal — continua sem ícone no Dock/Cmd+Tab, por ser
-`LSUIElement` (propositado).
+app instalada normal.
 
 Depois de qualquer alteração, compila e corre desta forma antes de dizeres
 que está feito. Warnings contam como problemas a resolver.
@@ -119,8 +118,7 @@ que deixou de haver o balão do `NSPopover` a dar-lho. Um
 `AppDelegate` (`Core/AppDelegate.swift`, ligado via
 `@NSApplicationDelegateAdaptor`) implementa
 `applicationShouldHandleReopen` para relançar a janela principal ao abrir
-a app pelo Spotlight enquanto já está a correr, apesar de não ter ícone
-no Dock. Por associação, a
+a app pelo Spotlight (ou pelo Dock) enquanto já está a correr. Por associação, a
 janela principal também passou a ser gerida à mão
 (`MainWindowController.swift`, um `NSWindow` simples) em vez de uma
 `Window` scene do SwiftUI — assim que o popover e a janela deixam de
@@ -279,8 +277,8 @@ overlay.
    genérico, mas só se o esquema for reconhecidamente do Xisto. Não escrever
    em `~/Documents`.
 8. Preferências em `UserDefaults` via `@AppStorage`, nunca no SwiftData.
-9. Sendo LSUIElement, abrir a janela de Settings exige `NSApp.activate(...)`
-   antes, senão aparece atrás de tudo. Usar a `Settings` scene padrão.
+9. Abrir a janela de Preferências usa a `Settings` scene padrão do SwiftUI,
+   através de `SettingsLink`.
 
 ## Reports
 
