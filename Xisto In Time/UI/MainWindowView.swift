@@ -75,6 +75,7 @@ private struct SessionEditorByIDView: View {
 }
 
 enum MainWindowSection: String, CaseIterable, Identifiable {
+    case calendar = "Calendário"
     case sessions = "Sessões"
     case projects = "Projectos"
     case tasks = "Tarefas"
@@ -84,6 +85,7 @@ enum MainWindowSection: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
+        case .calendar: "calendar"
         case .projects: "folder.fill"
         case .tasks: "checklist"
         case .sessions: "list.bullet.clipboard.fill"
@@ -93,6 +95,7 @@ enum MainWindowSection: String, CaseIterable, Identifiable {
 
     var tint: Color {
         switch self {
+        case .calendar: .teal
         case .projects: .blue
         case .tasks: .green
         case .sessions: .orange
@@ -102,7 +105,7 @@ enum MainWindowSection: String, CaseIterable, Identifiable {
 }
 
 struct MainWindowView: View {
-    @State private var selection: MainWindowSection? = .sessions
+    @State private var selection: MainWindowSection? = .calendar
     @State private var path = NavigationPath()
     @AppStorage(PreferencesKey.sidebarWidth) private var sidebarWidth = PreferencesDefault.sidebarWidth
 
@@ -182,6 +185,8 @@ struct MainWindowView: View {
     @ViewBuilder
     private var detailContent: some View {
         switch selection {
+        case .calendar:
+            CalendarWeekView(path: $path)
         case .projects:
             ProjectsView(path: $path)
         case .tasks:
