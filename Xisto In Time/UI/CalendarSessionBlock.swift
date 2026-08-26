@@ -22,6 +22,7 @@ struct CalendarSessionBlock: View {
     @State private var isOverlapping = false
     @State private var showingConfirmAlert = false
     @State private var confirmMessage = ""
+    @State private var showingFutureAlert = false
     @State private var pendingStart = Date()
     @State private var pendingEnd = Date()
 
@@ -95,6 +96,11 @@ struct CalendarSessionBlock: View {
             } message: {
                 Text(confirmMessage)
             }
+            .alert("Não é possível mover para o futuro", isPresented: $showingFutureAlert) {
+                Button("OK", role: .cancel) { resetTranslation() }
+            } message: {
+                Text("Uma sessão não pode terminar depois de agora.")
+            }
     }
 
     private var moveGesture: some Gesture {
@@ -110,7 +116,12 @@ struct CalendarSessionBlock: View {
             }
     }
 
-    /// Translation → candidate (start, end), snapped and clamped to never land in the future.
+    /// Translation → candidate (start, end), snapped. Does NOT clamp to "now"
+    /// — a candidate landing in the future is rejected outright by
+    /// `finishDrag`, with a clear message, rather than silently substituted
+    /// with something else (silently snapping a deliberate "move to
+    /// tomorrow" back to today's current time was confusing and looked like
+    /// data loss).
     ///
     /// Horizontal movement operates on the *visible* column index, not a raw
     /// calendar-day delta: when weekends are hidden, "one column right" of
@@ -138,8 +149,7 @@ struct CalendarSessionBlock: View {
         ) ?? shifted
 
         let snapped = CalendarLayoutMath.snap(dayShifted, toMinutes: snapMinutes, calendar: calendar)
-        let clampedStart = min(snapped, Date().addingTimeInterval(-duration))
-        return (clampedStart, clampedStart.addingTimeInterval(duration))
+        return (snapped, snapped.addingTimeInterval(duration))
     }
 
     private func resizeHandle(gesture: some Gesture, blockHeight: CGFloat) -> some View {
@@ -194,12 +204,16 @@ struct CalendarSessionBlock: View {
         let snapped = CalendarLayoutMath.snap(raw, toMinutes: snapMinutes, calendar: calendar)
         let earliestAllowedEnd = segment.session.startedAt.addingTimeInterval(TimeInterval(max(snapMinutes, 1) * 60))
         let clamped = max(snapped, earliestAllowedEnd)
-        return (segment.session.startedAt, min(clamped, Date()))
+        return (segment.session.startedAt, clamped)
     }
 
     private func finishDrag(newStart: Date, newEnd: Date) {
         guard newStart != segment.session.startedAt || newEnd != segment.session.endedAt else {
             resetTranslation()
+            return
+        }
+        guard newEnd <= Date() else {
+            showingFutureAlert = true
             return
         }
         pendingStart = newStart
