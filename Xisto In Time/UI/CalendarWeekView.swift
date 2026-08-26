@@ -3,10 +3,13 @@
 //  Xisto In Time
 //
 
+import SwiftData
 import SwiftUI
 
 struct CalendarWeekView: View {
     @Binding var path: NavigationPath
+
+    @Query(sort: \Session.startedAt) private var allSessions: [Session]
 
     @AppStorage(PreferencesKey.reportsShowWeekend)
     private var showWeekend = PreferencesDefault.reportsShowWeekend
@@ -22,6 +25,18 @@ struct CalendarWeekView: View {
 
     private var days: [Date] {
         ReportBuilder.weekDays(containing: referenceDate, showWeekend: showWeekend)
+    }
+
+    private var visibleSessions: [Session] {
+        guard let first = days.first, let last = days.last else { return [] }
+        let calendar = Calendar.current
+        let rangeStart = calendar.startOfDay(for: first)
+        guard let rangeEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: last)) else { return [] }
+        return allSessions.filter { $0.startedAt < rangeEnd && $0.endedAt > rangeStart }
+    }
+
+    private var segmentsByDay: [TimeInterval: [CalendarSessionSegment]] {
+        Dictionary(grouping: CalendarLayoutMath.segments(for: visibleSessions, days: days)) { $0.day.timeIntervalSinceReferenceDate }
     }
 
     var body: some View {
@@ -89,6 +104,16 @@ struct CalendarWeekView: View {
     private func dayColumn(for day: Date) -> some View {
         ZStack(alignment: .topLeading) {
             hourGridLines
+            ForEach(segmentsByDay[day.timeIntervalSinceReferenceDate] ?? []) { segment in
+                CalendarSessionBlock(
+                    segment: segment,
+                    hourHeight: hourHeight,
+                    columnWidth: dayColumnWidth,
+                    onOpenEditor: { session in
+                        path.append(SessionRoute(id: session.persistentModelID))
+                    }
+                )
+            }
         }
         .frame(width: dayColumnWidth, height: hourHeight * 24)
         .background(Color.primary.opacity(0.02))
