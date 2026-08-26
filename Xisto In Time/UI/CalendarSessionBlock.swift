@@ -16,6 +16,8 @@ struct CalendarSessionBlock: View {
     let onOpenEditor: (Session) -> Void
 
     @State private var moveTranslation: CGSize = .zero
+    @State private var resizeTopTranslation: CGFloat = 0
+    @State private var resizeBottomTranslation: CGFloat = 0
     @State private var isOverlapping = false
     @State private var showingOverlapAlert = false
     @State private var overlapDescription = ""
@@ -71,12 +73,22 @@ struct CalendarSessionBlock: View {
                     .lineLimit(1)
                     .padding(3)
             }
-            .frame(width: max(20, laneWidth - 2), height: baseHeight)
-            .offset(x: CGFloat(segment.lane) * laneWidth + 2 + (canMoveAcrossDays ? moveTranslation.width : 0), y: baseY + moveTranslation.height)
+            .frame(width: max(20, laneWidth - 2), height: max(4, baseHeight - resizeTopTranslation + resizeBottomTranslation))
+            .offset(x: CGFloat(segment.lane) * laneWidth + 2 + (canMoveAcrossDays ? moveTranslation.width : 0), y: baseY + resizeTopTranslation + moveTranslation.height)
             .onTapGesture(count: 2) {
                 onOpenEditor(segment.session)
             }
             .gesture(moveGesture)
+            .overlay(alignment: .top) {
+                if segment.isSessionStart {
+                    resizeHandle(gesture: topResizeGesture)
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if segment.isSessionEnd {
+                    resizeHandle(gesture: bottomResizeGesture)
+                }
+            }
             .alert("Sobreposição de sessões", isPresented: $showingOverlapAlert) {
                 Button("Cancelar", role: .cancel) { resetTranslation() }
                 Button("Continuar mesmo assim") { checkDurationThenCommit() }
@@ -118,6 +130,60 @@ struct CalendarSessionBlock: View {
         return (clampedStart, clampedStart.addingTimeInterval(duration))
     }
 
+    private func resizeHandle(gesture: some Gesture) -> some View {
+        Rectangle()
+            .fill(Color.clear)
+            .frame(height: 8)
+            .contentShape(Rectangle())
+            .overlay(Capsule().fill(Color.primary.opacity(0.25)).frame(width: 24, height: 3))
+            .gesture(gesture)
+    }
+
+    private var topResizeGesture: some Gesture {
+        DragGesture(minimumDistance: 2)
+            .onChanged { value in
+                resizeTopTranslation = value.translation.height
+                let (start, end) = topCandidateRange()
+                isOverlapping = overlapCheck(start, end, segment.session.persistentModelID) != nil
+            }
+            .onEnded { _ in
+                let (start, end) = topCandidateRange()
+                finishDrag(newStart: start, newEnd: end)
+            }
+    }
+
+    private var bottomResizeGesture: some Gesture {
+        DragGesture(minimumDistance: 2)
+            .onChanged { value in
+                resizeBottomTranslation = value.translation.height
+                let (start, end) = bottomCandidateRange()
+                isOverlapping = overlapCheck(start, end, segment.session.persistentModelID) != nil
+            }
+            .onEnded { _ in
+                let (start, end) = bottomCandidateRange()
+                finishDrag(newStart: start, newEnd: end)
+            }
+    }
+
+    private func topCandidateRange() -> (Date, Date) {
+        let calendar = Calendar.current
+        let timeDeltaSeconds = Double(resizeTopTranslation / hourHeight) * 3600
+        let raw = segment.session.startedAt.addingTimeInterval(timeDeltaSeconds)
+        let snapped = CalendarLayoutMath.snap(raw, toMinutes: snapMinutes, calendar: calendar)
+        let latestAllowedStart = segment.session.endedAt.addingTimeInterval(-TimeInterval(max(snapMinutes, 1) * 60))
+        return (min(snapped, latestAllowedStart), segment.session.endedAt)
+    }
+
+    private func bottomCandidateRange() -> (Date, Date) {
+        let calendar = Calendar.current
+        let timeDeltaSeconds = Double(resizeBottomTranslation / hourHeight) * 3600
+        let raw = segment.session.endedAt.addingTimeInterval(timeDeltaSeconds)
+        let snapped = CalendarLayoutMath.snap(raw, toMinutes: snapMinutes, calendar: calendar)
+        let earliestAllowedEnd = segment.session.startedAt.addingTimeInterval(TimeInterval(max(snapMinutes, 1) * 60))
+        let clamped = max(snapped, earliestAllowedEnd)
+        return (segment.session.startedAt, min(clamped, Date()))
+    }
+
     private func finishDrag(newStart: Date, newEnd: Date) {
         guard newStart != segment.session.startedAt || newEnd != segment.session.endedAt else {
             resetTranslation()
@@ -148,6 +214,8 @@ struct CalendarSessionBlock: View {
 
     private func resetTranslation() {
         moveTranslation = .zero
+        resizeTopTranslation = 0
+        resizeBottomTranslation = 0
         isOverlapping = false
     }
 }
