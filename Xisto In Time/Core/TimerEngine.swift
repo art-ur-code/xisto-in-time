@@ -135,6 +135,11 @@ final class TimerEngine {
         return max(0, targetDuration - elapsed)
     }
 
+    /// Wall-clock start of the running session, for callers that need to
+    /// position it on a timeline (e.g. the calendar week view). `nil` when
+    /// nothing is running.
+    var currentStartedAt: Date? { startedAt }
+
     /// Overrides how much time is left until `targetDuration`, by adjusting elapsed
     /// accordingly. Counterpart to `setElapsed` for countdown-style displays. No-op
     /// without a target.
