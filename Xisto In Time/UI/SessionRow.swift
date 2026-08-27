@@ -30,6 +30,17 @@ struct SessionRow: View {
         return timerEngine.isRunning && timerEngine.currentTask?.persistentModelID == task.persistentModelID
     }
 
+    /// Trabalho is the implicit default and stays unmarked; Pausa/Plano get
+    /// a small colored badge next to the time range, regardless of whether
+    /// the session has a task/project (which already shows its own color).
+    private var kindBadge: (label: String, color: Color)? {
+        switch session.kind {
+        case .work: return nil
+        case .break: return ("Pausa", .gray)
+        case .plan: return ("Plano", Color(hex: "FAE588"))
+        }
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             if showsTask, let project = session.task?.project {
@@ -51,6 +62,14 @@ struct SessionRow: View {
                         Text(project.name)
                     }
                     Text("\(session.startedAt.formatted(date: .omitted, time: .shortened)) – \(session.endedAt.formatted(date: .omitted, time: .shortened))")
+                    if let kindBadge {
+                        Text(kindBadge.label)
+                            .font(.caption2.bold())
+                            .foregroundStyle(.primary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 1)
+                            .background(kindBadge.color.opacity(0.35), in: Capsule())
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
