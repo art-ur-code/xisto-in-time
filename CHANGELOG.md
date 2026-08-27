@@ -7,6 +7,37 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.17.0] - 2026-08-27
+
+### Adicionado
+
+- Tipo de sessão "Plano" (além de Trabalho e Pausa): cria-se e edita-se à
+  mão como qualquer outra sessão, pode ter datas no futuro (as únicas
+  que podem), sobrepõe-se em silêncio a Trabalho/Pausa sem gerar aviso
+  (planear em cima do que se vai fazer é o comportamento esperado), e
+  aparece no Calendário a amarelo (`#FAE588`). Fica de fora dos totais
+  de Relatórios, tal como a Pausa já ficava.
+- Calendário: confirmação com "De:"/"Para:" antes de gravar qualquer
+  arrasto (mover ou redimensionar), incluindo avisos de sobreposição ou
+  duração longa na mesma caixa.
+- Calendário: linha vermelha a marcar a hora actual, só na coluna do
+  dia de hoje.
+- Calendário: cabeçalhos dos dias fixos ao fazer scroll vertical.
+- Calendário: botão "Esta semana" passa a "Agora" — volta à semana
+  actual e faz scroll até à hora de agora.
+
+### Corrigido
+
+- Calendário: o botão de ir para a hora actual não fazia scroll nenhum —
+  limitação do `ScrollViewReader.scrollTo` do macOS numa `ScrollView`
+  combinada de dois eixos; resolvido separando em duas `ScrollView` de
+  eixo único aninhadas.
+- Calendário: arrastar uma sessão de Trabalho/Pausa para uma data futura
+  substituía silenciosamente o destino pela hora actual, em vez de
+  recusar — parecia perda de dados. Passa a recusar com uma mensagem
+  clara e a repor a posição original, tal como o editor de sessões já
+  fazia.
+
 ## [1.16.0] - 2026-08-26
 
 ### Adicionado
