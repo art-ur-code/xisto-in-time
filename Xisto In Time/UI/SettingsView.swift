@@ -64,7 +64,7 @@ private struct GeneralSettingsPane: View {
                         Text(theme.label).tag(theme)
                     }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
                 .onChange(of: appTheme) { _, _ in
                     Theme.syncAppAppearance()
                 }
