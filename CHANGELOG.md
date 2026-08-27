@@ -7,6 +7,14 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.19.0] - 2026-08-27
+
+### Adicionado
+
+- Calendário: ao clicar/arrastar para criar uma sessão, mostra um
+  "fantasma" tracejado com o intervalo de horas em tempo real,
+  acompanhando o gesto até soltar.
+
 ## [1.18.0] - 2026-08-27
 
 ### Adicionado
