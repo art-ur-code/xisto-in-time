@@ -117,17 +117,33 @@ enum Theme {
 }
 
 extension Theme {
-    /// Applies the user's theme preference to the whole app. None of the
-    /// app's 4 windows/panels (main window, menu-bar popover, the shared
-    /// Pomodoro/Idle overlay panel, and Settings itself) define their own
-    /// `appearance` — AppKit propagates this to all of them automatically.
+    /// Posted whenever `syncAppAppearance()` runs, so anything that needs
+    /// to react to the app-wide appearance changing (see
+    /// `MenuBarController.syncStatusItemAppearance()`) doesn't need a
+    /// direct reference to whoever called `syncAppAppearance()`.
+    static let didSyncAppearanceNotification = Notification.Name("ThemeDidSyncAppearance")
+
+    /// Applies the user's theme preference to the whole app. Of the app's
+    /// 5 windows/panels/status-item surfaces (main window, menu-bar
+    /// popover, the shared Pomodoro/Idle overlay panel, Settings, and the
+    /// menu-bar status item), only the status item is exempt — see
+    /// `MenuBarController.syncStatusItemAppearance()`, which listens for
+    /// `didSyncAppearanceNotification` and deliberately keeps the status
+    /// item's own appearance pinned to the real system state instead: the
+    /// menu bar's own chrome always follows the actual macOS appearance,
+    /// not any per-app override, so letting the status item's hosted label
+    /// inherit the override would make it illegible whenever the two
+    /// disagree. The other 4 surfaces define no `appearance` of their own,
+    /// so AppKit propagates this assignment to them automatically.
     /// `Theme.Color.dynamic(light:dark:)` already resolves against the
     /// current drawing context's appearance, so it needs no changes.
     ///
-    /// `@MainActor` because `NSApplication.shared` is main-actor-isolated
-    /// under Swift 6 strict concurrency (this project's mode) — both call
-    /// sites (`Xisto_In_TimeApp.init()`, a SwiftUI `.onChange` closure)
-    /// already run on the main actor, so this costs nothing there.
+    /// `@MainActor` explicitly, matching this project's
+    /// `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` build setting (the
+    /// project is Swift 5 language mode, not Swift 6 strict concurrency —
+    /// the annotation is correct either way since both call sites,
+    /// `Xisto_In_TimeApp.init()` and a SwiftUI `.onChange` closure, are
+    /// already on the main actor).
     @MainActor
     static func syncAppAppearance() {
         let appearance: NSAppearance?
@@ -137,5 +153,6 @@ extension Theme {
         case .system: appearance = nil
         }
         NSApplication.shared.appearance = appearance
+        NotificationCenter.default.post(name: didSyncAppearanceNotification, object: nil)
     }
 }

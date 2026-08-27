@@ -7,6 +7,12 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.24.0] - 2026-08-27
+
+### Adicionado
+
+- Selector de tema (Claro/Escuro/Sistema) em Preferências → Geral, aplicado de imediato sem reiniciar a app.
+
 ## [1.23.0] - 2026-08-27
 
 ### Adicionado

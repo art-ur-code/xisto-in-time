@@ -65,7 +65,7 @@ private struct GeneralSettingsPane: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .onChange(of: appTheme) {
+                .onChange(of: appTheme) { _, _ in
                     Theme.syncAppAppearance()
                 }
             }

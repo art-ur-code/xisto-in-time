@@ -108,6 +108,17 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         if Preferences.openWindowOnLaunch() {
             windowController.show()
         }
+
+        syncStatusItemAppearance()
+        NotificationCenter.default.addObserver(
+            forName: Theme.didSyncAppearanceNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.syncStatusItemAppearance()
+            }
+        }
     }
 
     /// `NSStatusItem.variableLength` only sizes the button from its own cell
@@ -133,6 +144,26 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         guard let labelHostingView else { return }
         labelHostingView.layoutSubtreeIfNeeded()
         statusItem.length = labelHostingView.fittingSize.width
+    }
+
+    /// Keeps the status item's hosted label legible regardless of any
+    /// app-wide theme override (`Theme.syncAppAppearance()`): the real
+    /// menu bar always follows the actual macOS appearance, not a
+    /// per-app one, so this reads the system's actual current appearance
+    /// directly (independent of whatever `NSApplication.shared.appearance`
+    /// is currently set to) rather than inheriting it. Known limitation,
+    /// accepted: this does not live-track the user changing System
+    /// Settings' own Appearance while a manual theme override is active
+    /// mid-session — it's re-applied on every `syncAppAppearance()` call
+    /// (app launch, and every time the user picks a theme in Preferências),
+    /// which covers the cases that matter in practice.
+    private func syncStatusItemAppearance() {
+        guard Preferences.appTheme() != .system else {
+            statusItem.button?.appearance = nil
+            return
+        }
+        let systemIsDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+        statusItem.button?.appearance = NSAppearance(named: systemIsDark ? .darkAqua : .aqua)
     }
 
     @objc private func togglePopover() {
