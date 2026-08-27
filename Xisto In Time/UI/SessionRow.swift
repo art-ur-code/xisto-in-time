@@ -36,8 +36,8 @@ struct SessionRow: View {
     private var kindBadge: (label: String, color: Color)? {
         switch session.kind {
         case .work: return nil
-        case .break: return ("Pausa", .gray)
-        case .plan: return ("Plano", Color(hex: "FAE588"))
+        case .break: return ("Pausa", SessionKind.break.color)
+        case .plan: return ("Plano", SessionKind.plan.color)
         }
     }
 

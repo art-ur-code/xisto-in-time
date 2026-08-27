@@ -65,7 +65,7 @@ struct SessionControlView: View {
     }
 
     private var normalContent: some View {
-        VStack(alignment: .leading, spacing: compact ? 8 : 14) {
+        VStack(alignment: .leading, spacing: compact ? Theme.Spacing.md : 14) {
             if timerEngine.isRunning {
                 runningIndicatorRow
             }
@@ -198,7 +198,7 @@ struct SessionControlView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, compact ? 8 : 14)
+        .padding(.vertical, compact ? Theme.Spacing.md : 14)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(accentColor.opacity(timerEngine.isRunning ? 0.16 : 0.08))
@@ -217,15 +217,15 @@ struct SessionControlView: View {
                     mode = m
                 } label: {
                     Text(m.label)
-                        .font(.system(size: 15, weight: m == mode ? .bold : .regular))
+                        .font(.system(size: Theme.Font.callout, weight: m == mode ? .bold : .regular))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(m == mode ? accentColor : Color.gray.opacity(0.18))
+                    RoundedRectangle(cornerRadius: Theme.Radius.lg, style: .continuous)
+                        .fill(m == mode ? accentColor : Theme.Color.textFaint.opacity(0.18))
                 )
                 .foregroundStyle(m == mode ? .white : .primary)
             }
@@ -397,11 +397,11 @@ struct SessionControlView: View {
             VStack(alignment: .leading, spacing: 4) {
                 if let selectedTask {
                     Text("A REGISTAR EM")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: Theme.Font.caption, weight: .semibold))
                         .tracking(0.6)
                         .foregroundStyle(.secondary)
                     Text(selectedTask.title)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: Theme.Font.callout, weight: .semibold))
                         .lineLimit(2)
                     if let project = selectedTask.project {
                         Text(project.name)
@@ -410,11 +410,11 @@ struct SessionControlView: View {
                     }
                 } else {
                     Text("A REGISTAR EM")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: Theme.Font.caption, weight: .semibold))
                         .tracking(0.6)
                         .foregroundStyle(.secondary)
                     Text("Sem tarefa")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: Theme.Font.callout, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -422,7 +422,7 @@ struct SessionControlView: View {
             if !timerEngine.isRunning {
                 Button("Mudar") { showingPicker = true }
                     .buttonStyle(.plain)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: Theme.Font.body, weight: .semibold))
                     .foregroundStyle(Color.accentColor)
             }
         }
@@ -449,7 +449,7 @@ struct SessionControlView: View {
                     startCurrentPhase()
                 }
                 .buttonStyle(.plain)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: Theme.Font.footnote, weight: .semibold))
                 .foregroundStyle(Color.accentColor)
             }
         }
