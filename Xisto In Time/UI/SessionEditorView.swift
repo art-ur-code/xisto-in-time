@@ -34,12 +34,14 @@ struct SessionEditorView: View {
     @State private var showingLongDurationAlert = false
     @State private var showingDeleteConfirmation = false
 
-    init(session: Session? = nil) {
+    init(session: Session? = nil, initialStart: Date? = nil, initialEnd: Date? = nil) {
         self.existingSession = session
         let now = Date()
-        _startedAt = State(initialValue: session?.startedAt ?? now.addingTimeInterval(-3600))
-        _endedAt = State(initialValue: session?.endedAt ?? now)
-        _kind = State(initialValue: session?.kind ?? .work)
+        _startedAt = State(initialValue: session?.startedAt ?? initialStart ?? now.addingTimeInterval(-3600))
+        _endedAt = State(initialValue: session?.endedAt ?? initialEnd ?? now)
+        // A range starting in the future can only be a Plano — Trabalho/Pausa
+        // would be rejected the moment the form tries to save as-is.
+        _kind = State(initialValue: session?.kind ?? ((initialStart ?? now) > now ? .plan : .work))
         _note = State(initialValue: session?.note ?? "")
         _interrupted = State(initialValue: session?.interrupted ?? false)
         _selectedTask = State(initialValue: session?.task)

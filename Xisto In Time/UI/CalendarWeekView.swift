@@ -14,6 +14,16 @@ private struct CalendarScrollOffsetKey: PreferenceKey {
     }
 }
 
+/// A time range picked by clicking/dragging an empty spot on the grid,
+/// pending confirmation in `SessionEditorView`. `Identifiable` so it can
+/// drive `.sheet(item:)` directly — presence of a non-nil value means
+/// "show the sheet."
+private struct NewSessionRange: Identifiable {
+    let id = UUID()
+    let start: Date
+    let end: Date
+}
+
 struct CalendarWeekView: View {
     @Binding var path: NavigationPath
 
@@ -29,6 +39,7 @@ struct CalendarWeekView: View {
     @State private var referenceDate = Date()
     @State private var runningTick = Date()
     @State private var horizontalOffset: CGFloat = 0
+    @State private var newSessionRange: NewSessionRange?
 
     private let hourHeight: CGFloat = 56
     private let dayColumnWidth: CGFloat = 130
@@ -103,6 +114,12 @@ struct CalendarWeekView: View {
         .navigationTitle("Calendário")
         .onReceive(ticker) { date in
             runningTick = date
+        }
+        .sheet(item: $newSessionRange) { range in
+            NavigationStack {
+                SessionEditorView(initialStart: range.start, initialEnd: range.end)
+            }
+            .frame(width: 420, height: 520)
         }
     }
 
@@ -179,6 +196,13 @@ struct CalendarWeekView: View {
 
     private func dayColumn(for day: Date) -> some View {
         ZStack(alignment: .topLeading) {
+            // Sits behind the grid lines and session blocks, so a block's own
+            // gestures/double-click win when the click actually lands on it —
+            // this only fires on genuinely empty space.
+            Color.clear
+                .frame(width: dayColumnWidth, height: hourHeight * 24)
+                .contentShape(Rectangle())
+                .gesture(createSessionGesture(for: day))
             hourGridLines
             ForEach(segmentsByDay[day.timeIntervalSinceReferenceDate] ?? []) { segment in
                 CalendarSessionBlock(
@@ -219,6 +243,35 @@ struct CalendarWeekView: View {
         }
         .frame(width: dayColumnWidth, height: hourHeight * 24)
         .background(Color.primary.opacity(0.02))
+    }
+
+    /// A tap creates a fixed 30-minute default; an actual drag uses the
+    /// dragged range (earliest point as start, regardless of drag direction).
+    /// Both ends snap to `snapMinutes`, matching how moving/resizing an
+    /// existing session already snaps.
+    private func createSessionGesture(for day: Date) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .local)
+            .onEnded { value in
+                let calendar = Calendar.current
+                let isTap = abs(value.translation.width) < 4 && abs(value.translation.height) < 4
+
+                let startY = min(value.startLocation.y, value.location.y)
+                let rawStart = CalendarLayoutMath.date(forYOffset: startY, day: day, hourHeight: hourHeight)
+                let snappedStart = CalendarLayoutMath.snap(rawStart, toMinutes: snapMinutes, calendar: calendar)
+
+                let end: Date
+                if isTap {
+                    end = snappedStart.addingTimeInterval(30 * 60)
+                } else {
+                    let endY = max(value.startLocation.y, value.location.y)
+                    let rawEnd = CalendarLayoutMath.date(forYOffset: endY, day: day, hourHeight: hourHeight)
+                    let snappedEnd = CalendarLayoutMath.snap(rawEnd, toMinutes: snapMinutes, calendar: calendar)
+                    let minimumEnd = snappedStart.addingTimeInterval(TimeInterval(max(snapMinutes, 1) * 60))
+                    end = max(snappedEnd, minimumEnd)
+                }
+
+                newSessionRange = NewSessionRange(start: snappedStart, end: end)
+            }
     }
 
     private var hourGridLines: some View {
