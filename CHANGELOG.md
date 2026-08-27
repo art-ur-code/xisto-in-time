@@ -7,6 +7,17 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.20.0] - 2026-08-27
+
+### Adicionado
+
+- Lista de sessões: cápsula colorida a distinguir Plano (amarelo) e
+  Pausa (cinzento) — Trabalho continua sem marcação. Propaga-se a
+  Sessões, e dentro de Projecto/Tarefa.
+- Sessões: filtro segmentado Todos/Trabalho/Pausa/Plano antes da lista.
+- Sessões: mais 4 cards no topo — Planos hoje/esta semana, Pausas
+  hoje/esta semana, com o mesmo código de cor, em grelha responsiva.
+
 ## [1.19.0] - 2026-08-27
 
 ### Adicionado
