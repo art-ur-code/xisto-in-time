@@ -188,7 +188,7 @@ struct CalendarWeekView: View {
                     snapMinutes: snapMinutes,
                     days: days,
                     overlapCheck: { start, end, excluding in
-                        SessionStore.overlappingSession(startedAt: start, endedAt: end, excluding: excluding, in: allSessions)
+                        SessionStore.overlappingSession(startedAt: start, endedAt: end, excluding: excluding, kind: segment.session.kind, in: allSessions)
                     },
                     onCommit: { session, start, end in
                         SessionStore.rescheduleSession(session, startedAt: start, endedAt: end, in: modelContext)

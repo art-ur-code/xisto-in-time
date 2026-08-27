@@ -74,13 +74,22 @@ enum SessionStore {
         startedAt: Date,
         endedAt: Date,
         excluding excludedID: PersistentIdentifier?,
+        kind: SessionKind,
         in sessions: [Session]
     ) -> Session? {
         sessions.first { candidate in
             if let excludedID, candidate.persistentModelID == excludedID {
                 return false
             }
-            return startedAt < candidate.endedAt && endedAt > candidate.startedAt
+            guard startedAt < candidate.endedAt && endedAt > candidate.startedAt else {
+                return false
+            }
+            // Plano sobrepõe-se em silêncio a Trabalho/Pausa — é o
+            // comportamento esperado ao planear em cima do que se vai
+            // fazer. Trabalho↔Trabalho, Pausa↔Pausa e Plano↔Plano
+            // continuam a avisar como antes.
+            let exactlyOnePlan = (kind == .plan) != (candidate.kind == .plan)
+            return !exactlyOnePlan
         }
     }
 

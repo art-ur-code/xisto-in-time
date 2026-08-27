@@ -154,7 +154,7 @@ struct SessionEditorView: View {
             }
         }
 
-        if let overlapping = SessionStore.overlappingSession(startedAt: startedAt, endedAt: endedAt, excluding: existingSession?.persistentModelID, in: allSessions) {
+        if let overlapping = SessionStore.overlappingSession(startedAt: startedAt, endedAt: endedAt, excluding: existingSession?.persistentModelID, kind: kind, in: allSessions) {
             overlapDescription = SessionStore.describe(overlapping)
             showingOverlapAlert = true
             return
