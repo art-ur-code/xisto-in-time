@@ -7,6 +7,18 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.21.0] - 2026-08-27
+
+### Alterado
+
+- Ecrã "Sessões" redesenhado (handoff de design): pesquisa por código/
+  título/projecto, barra de resumo com 3 métricas (Trabalho/Planeado/
+  Pausas) e "Registado hoje vs. planeado", chips de filtro com
+  contagem, e listagem com dias em bloco único (em vez de cartões
+  separados), rail de cor por tipo, acções em hover, e mini-timeline.
+- Cor identitária de "Plano" passa de `#FAE588` para `#E8A300`/`#FFF4D6`,
+  unificada entre o Calendário e a lista de Sessões.
+
 ## [1.20.0] - 2026-08-27
 
 ### Adicionado
