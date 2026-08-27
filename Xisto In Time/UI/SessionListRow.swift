@@ -47,10 +47,10 @@ struct SessionListRow: View {
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(isSelected ? Color.accentColor.opacity(0.05) : (isHovered ? Color(hex: "FAFAFC") : Color.white))
+        .background(isSelected ? Color.accentColor.opacity(0.05) : (isHovered ? Theme.Color.surfaceHover : Theme.Color.surfacePrimary))
         .overlay(alignment: .top) {
             if !isFirstInGroup {
-                Rectangle().fill(Color(hex: "F0F0F3")).frame(height: 1)
+                Rectangle().fill(Theme.Color.fillSubtle).frame(height: 1)
             }
         }
         .contentShape(Rectangle())
@@ -86,46 +86,46 @@ struct SessionListRow: View {
     }
 
     private var textColumn: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            HStack(spacing: Theme.Spacing.md) {
                 Text(session.task?.externalRef ?? "—")
-                    .font(.system(size: 11.5, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(Color(hex: "8A8A90"))
+                    .font(.system(size: Theme.Font.caption, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Theme.Color.textMuted)
                 Text(session.task?.title ?? "Sem atribuição")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: Theme.Font.body, weight: .semibold))
                     .lineLimit(1)
                     .truncationMode(.tail)
                 if session.kind != .work {
                     Text(session.kind.label.uppercased())
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: Theme.Font.badge, weight: .bold))
                         .tracking(0.4)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(session.kind.lightColor, in: RoundedRectangle(cornerRadius: 4))
+                        .padding(.horizontal, Theme.Spacing.sm)
+                        .padding(.vertical, Theme.Spacing.xxs)
+                        .background(session.kind.lightColor, in: RoundedRectangle(cornerRadius: Theme.Radius.sm))
                         .foregroundStyle(session.kind.chipTextColor)
                         .fixedSize()
                 }
             }
 
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.Spacing.md) {
                 if let project = session.task?.project {
                     Text(project.name)
-                        .font(.system(size: 11.5, weight: .medium))
-                        .foregroundStyle(Color(hex: "6A6A70"))
-                    Text("·").foregroundStyle(Color(hex: "8A8A90").opacity(0.5))
+                        .font(.system(size: Theme.Font.caption, weight: .medium))
+                        .foregroundStyle(Theme.Color.textSecondary)
+                    Text("·").foregroundStyle(Theme.Color.textMuted.opacity(0.5))
                 }
                 Text("\(session.startedAt.formatted(date: .omitted, time: .shortened)) – \(session.endedAt.formatted(date: .omitted, time: .shortened))")
                     .monospacedDigit()
                 if let note = session.note, !note.isEmpty {
-                    Text("·").foregroundStyle(Color(hex: "8A8A90").opacity(0.5))
+                    Text("·").foregroundStyle(Theme.Color.textMuted.opacity(0.5))
                     Text(note)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .frame(maxWidth: 380, alignment: .leading)
                 }
             }
-            .font(.system(size: 11.5))
-            .foregroundStyle(Color(hex: "8A8A90"))
+            .font(.system(size: Theme.Font.caption))
+            .foregroundStyle(Theme.Color.textMuted)
 
             timeline
         }
@@ -146,7 +146,7 @@ struct SessionListRow: View {
 
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(Color(hex: "F0F0F3"))
+                    .fill(Theme.Color.fillSubtle)
                 RoundedRectangle(cornerRadius: 2)
                     .fill(session.kind.color)
                     .frame(width: max(2, trackWidth * widthFraction))
@@ -160,27 +160,27 @@ struct SessionListRow: View {
 
     private var durationText: some View {
         Text(TimerEngine.format(duration))
-            .font(.system(size: 13.5, design: .monospaced))
-            .foregroundStyle(session.kind == .break ? Color(hex: "9A9AA0") : Color(hex: "2A2A2F"))
+            .font(.system(size: Theme.Font.subheadline, design: .monospaced))
+            .foregroundStyle(session.kind == .break ? Theme.Color.textMuted : Theme.Color.inkStrong)
             .frame(width: 84, alignment: .trailing)
     }
 
     private var actions: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: Theme.Spacing.sm) {
             Button {
                 startFreeSession()
             } label: {
                 HStack(spacing: 5) {
-                    Text("▶").font(.system(size: 9))
+                    Text("▶").font(.system(size: Theme.Font.micro))
                     Text(isRunningThisTask ? "A correr" : "Começar")
-                        .font(.system(size: 12.5, weight: .semibold))
+                        .font(.system(size: Theme.Font.footnote, weight: .semibold))
                 }
-                .padding(.horizontal, 10)
+                .padding(.horizontal, Theme.Spacing.base)
                 .padding(.vertical, 5)
             }
             .buttonStyle(.plain)
-            .background(Color(hex: "EAF3FF"), in: RoundedRectangle(cornerRadius: 7))
-            .foregroundStyle(Color(hex: "007AFF"))
+            .background(Theme.Color.accentSubtle, in: RoundedRectangle(cornerRadius: Theme.Radius.md))
+            .foregroundStyle(Theme.Color.accent)
             .disabled(isRunningThisTask)
 
             Menu {
@@ -189,14 +189,14 @@ struct SessionListRow: View {
                 }
             } label: {
                 Image(systemName: "ellipsis")
-                    .foregroundStyle(Color(hex: "8A8A90"))
+                    .foregroundStyle(Theme.Color.textMuted)
             }
             .menuStyle(.borderlessButton)
             .frame(width: 26, height: 26)
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12))
-                .foregroundStyle(Color(hex: "C4C4C9"))
+                .font(.system(size: Theme.Font.footnote))
+                .foregroundStyle(Theme.Color.textFaint)
                 .onTapGesture {
                     path.wrappedValue.append(SessionRoute(id: session.persistentModelID))
                 }
