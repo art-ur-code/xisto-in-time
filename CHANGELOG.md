@@ -7,6 +7,16 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.18.0] - 2026-08-27
+
+### Adicionado
+
+- Calendário: clicar ou arrastar num espaço livre da grelha cria uma
+  sessão nova nesse dia/hora. Um clique simples usa um intervalo fixo
+  de 30 minutos a partir dessa hora; arrastar usa o intervalo exacto
+  arrastado. Abre sempre o editor de sessões pré-preenchido, para
+  confirmar antes de gravar.
+
 ## [1.17.0] - 2026-08-27
 
 ### Adicionado
