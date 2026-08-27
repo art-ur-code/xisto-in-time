@@ -1197,7 +1197,7 @@ EOF
 - Modify: `Xisto In Time/UI/SessionControlView.swift` (several call sites, listed below)
 
 **Interfaces:**
-- Consumes: `Theme.Font.{caption, footnote, callout, body}`, `Theme.Color.fillSubtle`, `Theme.Spacing.{md}`, `Theme.Radius.lg` (Task 1).
+- Consumes: `Theme.Font.{caption, footnote, callout, body}`, `Theme.Color.textFaint`, `Theme.Spacing.md`, `Theme.Radius.lg` (Task 1); `SessionKind.color` (Task 2, already-migrated `.break`/`.plan` cases).
 
 - [ ] **Step 1: `SessionRow.swift` — fix the stale Plano color and the fixed `.gray`**
 
