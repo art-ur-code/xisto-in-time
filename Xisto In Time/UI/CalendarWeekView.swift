@@ -24,6 +24,15 @@ private struct NewSessionRange: Identifiable {
     let end: Date
 }
 
+/// Live preview while clicking/dragging an empty spot — the "ghost" block,
+/// updated on every `DragGesture.onChanged`, cleared once the gesture ends
+/// and the confirmation sheet takes over.
+private struct CreationDragState {
+    let day: Date
+    let start: Date
+    let end: Date
+}
+
 struct CalendarWeekView: View {
     @Binding var path: NavigationPath
 
@@ -40,6 +49,7 @@ struct CalendarWeekView: View {
     @State private var runningTick = Date()
     @State private var horizontalOffset: CGFloat = 0
     @State private var newSessionRange: NewSessionRange?
+    @State private var creationDrag: CreationDragState?
 
     private let hourHeight: CGFloat = 56
     private let dayColumnWidth: CGFloat = 130
@@ -204,6 +214,7 @@ struct CalendarWeekView: View {
                 .contentShape(Rectangle())
                 .gesture(createSessionGesture(for: day))
             hourGridLines
+            creationGhost(for: day)
             ForEach(segmentsByDay[day.timeIntervalSinceReferenceDate] ?? []) { segment in
                 CalendarSessionBlock(
                     segment: segment,
@@ -248,30 +259,68 @@ struct CalendarWeekView: View {
     /// A tap creates a fixed 30-minute default; an actual drag uses the
     /// dragged range (earliest point as start, regardless of drag direction).
     /// Both ends snap to `snapMinutes`, matching how moving/resizing an
-    /// existing session already snaps.
+    /// existing session already snaps. `onChanged` keeps `creationDrag`
+    /// updated so `dayColumn(for:)` can render a live "ghost" preview;
+    /// `onEnded` computes the same range once more (the gesture may end
+    /// without ever calling `onChanged`, e.g. a very quick tap) and hands it
+    /// off to the confirmation sheet.
     private func createSessionGesture(for day: Date) -> some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: .local)
-            .onEnded { value in
-                let calendar = Calendar.current
-                let isTap = abs(value.translation.width) < 4 && abs(value.translation.height) < 4
-
-                let startY = min(value.startLocation.y, value.location.y)
-                let rawStart = CalendarLayoutMath.date(forYOffset: startY, day: day, hourHeight: hourHeight)
-                let snappedStart = CalendarLayoutMath.snap(rawStart, toMinutes: snapMinutes, calendar: calendar)
-
-                let end: Date
-                if isTap {
-                    end = snappedStart.addingTimeInterval(30 * 60)
-                } else {
-                    let endY = max(value.startLocation.y, value.location.y)
-                    let rawEnd = CalendarLayoutMath.date(forYOffset: endY, day: day, hourHeight: hourHeight)
-                    let snappedEnd = CalendarLayoutMath.snap(rawEnd, toMinutes: snapMinutes, calendar: calendar)
-                    let minimumEnd = snappedStart.addingTimeInterval(TimeInterval(max(snapMinutes, 1) * 60))
-                    end = max(snappedEnd, minimumEnd)
-                }
-
-                newSessionRange = NewSessionRange(start: snappedStart, end: end)
+            .onChanged { value in
+                let (start, end) = creationRange(for: day, value: value)
+                creationDrag = CreationDragState(day: day, start: start, end: end)
             }
+            .onEnded { value in
+                let (start, end) = creationRange(for: day, value: value)
+                creationDrag = nil
+                newSessionRange = NewSessionRange(start: start, end: end)
+            }
+    }
+
+    private func creationRange(for day: Date, value: DragGesture.Value) -> (Date, Date) {
+        let calendar = Calendar.current
+        let isTap = abs(value.translation.width) < 4 && abs(value.translation.height) < 4
+
+        let startY = min(value.startLocation.y, value.location.y)
+        let rawStart = CalendarLayoutMath.date(forYOffset: startY, day: day, hourHeight: hourHeight)
+        let snappedStart = CalendarLayoutMath.snap(rawStart, toMinutes: snapMinutes, calendar: calendar)
+
+        let end: Date
+        if isTap {
+            end = snappedStart.addingTimeInterval(30 * 60)
+        } else {
+            let endY = max(value.startLocation.y, value.location.y)
+            let rawEnd = CalendarLayoutMath.date(forYOffset: endY, day: day, hourHeight: hourHeight)
+            let snappedEnd = CalendarLayoutMath.snap(rawEnd, toMinutes: snapMinutes, calendar: calendar)
+            let minimumEnd = snappedStart.addingTimeInterval(TimeInterval(max(snapMinutes, 1) * 60))
+            end = max(snappedEnd, minimumEnd)
+        }
+        return (snappedStart, end)
+    }
+
+    /// Live "ghost" preview of the session being created, shown only in the
+    /// day column currently being dragged.
+    private func creationGhost(for day: Date) -> some View {
+        Group {
+            if let creationDrag, Calendar.current.isDate(creationDrag.day, inSameDayAs: day) {
+                let y = CalendarLayoutMath.yOffset(for: creationDrag.start, day: day, hourHeight: hourHeight)
+                let height = max(4, CalendarLayoutMath.yOffset(for: creationDrag.end, day: day, hourHeight: hourHeight) - y)
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.accentColor.opacity(0.25))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                    )
+                    .overlay(alignment: .topLeading) {
+                        Text("\(creationDrag.start.formatted(date: .omitted, time: .shortened)) – \(creationDrag.end.formatted(date: .omitted, time: .shortened))")
+                            .font(.caption2)
+                            .padding(3)
+                    }
+                    .frame(width: dayColumnWidth - 4, height: height)
+                    .offset(x: 2, y: y)
+                    .allowsHitTesting(false)
+            }
+        }
     }
 
     private var hourGridLines: some View {
