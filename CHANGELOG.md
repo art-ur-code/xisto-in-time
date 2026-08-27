@@ -7,6 +7,12 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.23.0] - 2026-08-27
+
+### Adicionado
+
+- Sistema de design (Theme): cores, tipografia, espaçamento e raio de canto centralizados app-wide, estabelecendo a base para tema escuro automático futuro.
+
 ## [1.22.1] - 2026-08-27
 
 ### Corrigido
