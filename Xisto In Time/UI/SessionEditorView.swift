@@ -60,6 +60,7 @@ struct SessionEditorView: View {
                 Picker("Tipo", selection: $kind) {
                     Text("Trabalho").tag(SessionKind.work)
                     Text("Pausa").tag(SessionKind.break)
+                    Text("Plano").tag(SessionKind.plan)
                 }
                 .pickerStyle(.segmented)
             }
@@ -145,10 +146,12 @@ struct SessionEditorView: View {
             return
         }
 
-        let now = Date()
-        guard startedAt <= now, endedAt <= now else {
-            errorMessage = "Não podes usar datas no futuro."
-            return
+        if kind != .plan {
+            let now = Date()
+            guard startedAt <= now, endedAt <= now else {
+                errorMessage = "Não podes usar datas no futuro."
+                return
+            }
         }
 
         if let overlapping = SessionStore.overlappingSession(startedAt: startedAt, endedAt: endedAt, excluding: existingSession?.persistentModelID, in: allSessions) {
