@@ -7,6 +7,14 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.22.0] - 2026-08-27
+
+### Adicionado
+
+- Preferências do Calendário: escolher entre grelha de 12 horas
+  (default, das 07:00 às 19:00) ou 24 horas. Em modo 12h, só se define
+  a hora de início — o fim fica automaticamente 12h depois.
+
 ## [1.21.0] - 2026-08-27
 
 ### Alterado
