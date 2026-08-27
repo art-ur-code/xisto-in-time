@@ -104,9 +104,9 @@ struct AllSessionsView: View {
     var body: some View {
         VStack(spacing: 0) {
             toolbar
-            Divider().foregroundStyle(Color(hex: "ECECF0"))
+            Divider().foregroundStyle(Theme.Color.divider)
             summaryBar
-            Divider().foregroundStyle(Color(hex: "ECECF0"))
+            Divider().foregroundStyle(Theme.Color.divider)
             filterChips
 
             if dayGroups.isEmpty {
@@ -114,7 +114,7 @@ struct AllSessionsView: View {
                 Spacer()
             } else {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 18, pinnedViews: [.sectionHeaders]) {
+                    LazyVStack(alignment: .leading, spacing: Theme.Spacing.xl, pinnedViews: [.sectionHeaders]) {
                         ForEach(dayGroups) { group in
                             Section {
                                 dayBlock(for: group)
@@ -124,12 +124,12 @@ struct AllSessionsView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 22)
+                    .padding(.horizontal, Theme.Spacing.xxl)
                     .padding(.bottom, 28)
                 }
             }
         }
-        .background(Color.white)
+        .background(Theme.Color.surfacePrimary)
         .navigationTitle("Sessões")
         .sheet(isPresented: $showingNewSessionEditor) {
             NavigationStack {
@@ -144,40 +144,40 @@ struct AllSessionsView: View {
     private var toolbar: some View {
         HStack(spacing: 14) {
             Text("Sessões")
-                .font(.system(size: 19, weight: .bold))
+                .font(.system(size: Theme.Font.title3, weight: .bold))
 
             Spacer()
 
             HStack(spacing: 7) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 13))
-                    .foregroundStyle(Color(hex: "9A9AA0"))
+                    .font(.system(size: Theme.Font.subheadline))
+                    .foregroundStyle(Theme.Color.textMuted)
                 TextField("Pesquisar tarefa, código ou projecto", text: $query)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13))
+                    .font(.system(size: Theme.Font.subheadline))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, Theme.Spacing.base)
+            .padding(.vertical, Theme.Spacing.sm)
             .frame(width: 268)
-            .background(Color(hex: "F1F1F4"), in: RoundedRectangle(cornerRadius: 8))
+            .background(Theme.Color.fillSubtle, in: RoundedRectangle(cornerRadius: Theme.Radius.md))
 
             Button {
                 showingNewSessionEditor = true
             } label: {
-                HStack(spacing: 6) {
-                    Text("+").font(.system(size: 15))
-                    Text("Nova sessão").font(.system(size: 13, weight: .semibold))
+                HStack(spacing: Theme.Spacing.sm) {
+                    Text("+").font(.system(size: Theme.Font.callout))
+                    Text("Nova sessão").font(.system(size: Theme.Font.subheadline, weight: .semibold))
                 }
-                .padding(.horizontal, 13)
+                .padding(.horizontal, Theme.Spacing.lg)
                 .padding(.vertical, 7)
             }
             .buttonStyle(.plain)
-            .background(Color(hex: "007AFF"), in: RoundedRectangle(cornerRadius: 8))
+            .background(Theme.Color.accent, in: RoundedRectangle(cornerRadius: Theme.Radius.md))
             .foregroundStyle(.white)
             .help("Criar uma sessão passada, com início e fim escolhidos à mão")
         }
-        .padding(.horizontal, 22)
-        .padding(.top, 16)
+        .padding(.horizontal, Theme.Spacing.xxl)
+        .padding(.top, Theme.Spacing.xl)
         .padding(.bottom, 14)
     }
 
@@ -204,26 +204,26 @@ struct AllSessionsView: View {
             let planned = metricTotal(for: .plan)
             VStack(alignment: .trailing, spacing: 2) {
                 Text(scope == .today ? "Registado hoje vs. planeado" : "Registado esta semana")
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(Color(hex: "7C7C82"))
+                    .font(.system(size: Theme.Font.caption))
+                    .foregroundStyle(Theme.Color.textMuted)
                 Text("\(ReportBuilder.formatHoursMinutes(worked)) de \(ReportBuilder.formatHoursMinutes(worked + planned))")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: Theme.Font.subheadline, weight: .semibold))
             }
         }
-        .padding(.horizontal, 22)
+        .padding(.horizontal, Theme.Spacing.xxl)
         .padding(.vertical, 14)
     }
 
     private func metric(label: String, color: Color, total: TimeInterval) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 6) {
+            HStack(spacing: Theme.Spacing.sm) {
                 Circle().fill(color).frame(width: 7, height: 7)
                 Text(label)
-                    .font(.system(size: 11.5, weight: .medium))
-                    .foregroundStyle(Color(hex: "7C7C82"))
+                    .font(.system(size: Theme.Font.caption, weight: .medium))
+                    .foregroundStyle(Theme.Color.textMuted)
             }
             Text(TimerEngine.format(total))
-                .font(.system(size: 20, design: .monospaced))
+                .font(.system(size: Theme.Font.statLarge, design: .monospaced))
                 .tracking(-0.5)
         }
         .frame(minWidth: 116, alignment: .leading)
@@ -232,14 +232,14 @@ struct AllSessionsView: View {
     // MARK: - Filter chips
 
     private var filterChips: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Theme.Spacing.md) {
             ForEach(SessionKindFilter.allCases) { filter in
                 chip(for: filter)
             }
             Spacer()
         }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Theme.Spacing.xxl)
+        .padding(.vertical, Theme.Spacing.lg)
     }
 
     private func chip(for filter: SessionKindFilter) -> some View {
@@ -256,15 +256,15 @@ struct AllSessionsView: View {
                     .opacity(0.55)
                     .monospacedDigit()
             }
-            .font(.system(size: 12.5, weight: .semibold))
-            .padding(.horizontal, 12)
+            .font(.system(size: Theme.Font.footnote, weight: .semibold))
+            .padding(.horizontal, Theme.Spacing.lg)
             .padding(.vertical, 5)
         }
         .buttonStyle(.plain)
-        .background(isActive ? Color(hex: "1C1C1E") : Color(hex: "F4F4F7"), in: Capsule())
-        .foregroundStyle(isActive ? Color.white : Color(hex: "5A5A60"))
+        .background(isActive ? Theme.Color.chipActiveBackground : Theme.Color.fillSubtle, in: Capsule())
+        .foregroundStyle(isActive ? Theme.Color.chipActiveText : Theme.Color.textSecondary)
         .overlay(
-            Capsule().stroke(isActive ? Color.clear : Color(hex: "E9E9EE"), lineWidth: 1)
+            Capsule().stroke(isActive ? Color.clear : Theme.Color.divider, lineWidth: 1)
         )
     }
 
@@ -282,19 +282,19 @@ struct AllSessionsView: View {
                 )
             }
         }
-        .background(Color.white)
+        .background(Theme.Color.surfacePrimary)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(hex: "E7E7EB"), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.Color.divider, lineWidth: 1))
     }
 
     private var emptyState: some View {
         VStack(spacing: 5) {
             Text("Sem sessões para este filtro")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color(hex: "6A6A70"))
+                .font(.system(size: Theme.Font.body, weight: .semibold))
+                .foregroundStyle(Theme.Color.textSecondary)
             Text("Ajusta a pesquisa ou escolhe \u{201C}Todos\u{201D}.")
-                .font(.system(size: 12.5))
-                .foregroundStyle(Color(hex: "9A9AA0"))
+                .font(.system(size: Theme.Font.footnote))
+                .foregroundStyle(Theme.Color.textMuted)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 70)
