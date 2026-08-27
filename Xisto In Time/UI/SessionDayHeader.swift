@@ -21,27 +21,27 @@ struct SessionDayHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(Self.dayTitle(for: group.day))
-                .font(.system(size: 12.5, weight: .bold))
+                .font(.system(size: Theme.Font.footnote, weight: .bold))
                 .foregroundStyle(.primary)
             if isToday {
                 Text("HOJE")
-                    .font(.system(size: 10.5, weight: .bold))
+                    .font(.system(size: Theme.Font.badge, weight: .bold))
                     .tracking(0.4)
-                    .foregroundStyle(Color(hex: "B05800"))
+                    .foregroundStyle(Theme.Color.badgeTodayText)
                     .padding(.horizontal, 7)
-                    .padding(.vertical, 2)
-                    .background(Color(hex: "FFD6D6"), in: RoundedRectangle(cornerRadius: 5))
+                    .padding(.vertical, Theme.Spacing.xxs)
+                    .background(Theme.Color.badgeTodayBackground, in: RoundedRectangle(cornerRadius: Theme.Radius.sm))
             }
             Rectangle()
-                .fill(Color(hex: "ECECF0"))
+                .fill(Theme.Color.divider)
                 .frame(height: 1)
             Text("\(group.sessions.count) \(group.sessions.count == 1 ? "sessão" : "sessões") · \(TimerEngine.format(group.total))")
-                .font(.system(size: 11.5))
-                .foregroundStyle(Color(hex: "9A9AA0"))
+                .font(.system(size: Theme.Font.caption))
+                .foregroundStyle(Theme.Color.textMuted)
                 .monospacedDigit()
         }
         .textCase(nil)
-        .padding(.top, 9)
+        .padding(.top, Theme.Spacing.base)
         .padding(.bottom, 7)
         .padding(.horizontal, 2)
     }
