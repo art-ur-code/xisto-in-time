@@ -347,10 +347,10 @@ struct CalendarWeekView: View {
             if let creationDrag, Calendar.current.isDate(creationDrag.day, inSameDayAs: day) {
                 let y = CalendarLayoutMath.yOffset(for: creationDrag.start, day: day, hourHeight: hourHeight, startHour: gridStartHour)
                 let height = max(4, CalendarLayoutMath.yOffset(for: creationDrag.end, day: day, hourHeight: hourHeight, startHour: gridStartHour) - y)
-                RoundedRectangle(cornerRadius: 4)
+                RoundedRectangle(cornerRadius: Theme.Radius.sm)
                     .fill(Color.accentColor.opacity(0.25))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: Theme.Radius.sm)
                             .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                     )
                     .overlay(alignment: .topLeading) {

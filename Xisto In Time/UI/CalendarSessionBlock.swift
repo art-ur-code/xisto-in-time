@@ -69,10 +69,10 @@ struct CalendarSessionBlock: View {
     }
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 4)
+        RoundedRectangle(cornerRadius: Theme.Radius.sm)
             .fill(fillColor)
             .overlay(
-                RoundedRectangle(cornerRadius: 4)
+                RoundedRectangle(cornerRadius: Theme.Radius.sm)
                     .strokeBorder(borderColor, style: StrokeStyle(lineWidth: isOverlapping ? 2 : (isUnassignedWork ? 1 : 0), dash: (!isOverlapping && isUnassignedWork) ? [4, 3] : []))
             )
             .overlay(alignment: .topLeading) {

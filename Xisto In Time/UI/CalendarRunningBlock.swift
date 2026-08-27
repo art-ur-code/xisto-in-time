@@ -34,10 +34,10 @@ struct CalendarRunningBlock: View {
     }
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 4)
+        RoundedRectangle(cornerRadius: Theme.Radius.sm)
             .fill(kind == .break ? SessionKind.break.color.opacity(0.35) : (projectColor ?? .accentColor).opacity(0.35))
             .overlay(
-                RoundedRectangle(cornerRadius: 4)
+                RoundedRectangle(cornerRadius: Theme.Radius.sm)
                     .strokeBorder(strokeColor, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
             )
             .overlay(alignment: .topLeading) {
