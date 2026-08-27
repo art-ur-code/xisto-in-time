@@ -7,6 +7,15 @@ versionamento segue [SemVer](https://semver.org/lang/pt-BR/): `major.minor.patch
 onde major é para alterações estruturais/breaking, minor para novas
 funcionalidades, e patch para correcções de bugs.
 
+## [1.22.1] - 2026-08-27
+
+### Corrigido
+
+- Calendário: as colunas dos dias ficavam com largura fixa (130pt),
+  deixando espaço vazio à direita em janelas largas. Passam a ajustar-
+  se à largura total da janela, com um mínimo de 110pt antes de voltar
+  a usar scroll horizontal.
+
 ## [1.22.0] - 2026-08-27
 
 ### Adicionado
