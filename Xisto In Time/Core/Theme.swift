@@ -115,3 +115,27 @@ enum Theme {
         static let xl: CGFloat = 20
     }
 }
+
+extension Theme {
+    /// Applies the user's theme preference to the whole app. None of the
+    /// app's 4 windows/panels (main window, menu-bar popover, the shared
+    /// Pomodoro/Idle overlay panel, and Settings itself) define their own
+    /// `appearance` — AppKit propagates this to all of them automatically.
+    /// `Theme.Color.dynamic(light:dark:)` already resolves against the
+    /// current drawing context's appearance, so it needs no changes.
+    ///
+    /// `@MainActor` because `NSApplication.shared` is main-actor-isolated
+    /// under Swift 6 strict concurrency (this project's mode) — both call
+    /// sites (`Xisto_In_TimeApp.init()`, a SwiftUI `.onChange` closure)
+    /// already run on the main actor, so this costs nothing there.
+    @MainActor
+    static func syncAppAppearance() {
+        let appearance: NSAppearance?
+        switch Preferences.appTheme() {
+        case .light: appearance = NSAppearance(named: .aqua)
+        case .dark: appearance = NSAppearance(named: .darkAqua)
+        case .system: appearance = nil
+        }
+        NSApplication.shared.appearance = appearance
+    }
+}

@@ -25,6 +25,7 @@ enum PreferencesKey {
     static let sidebarWidth = "sidebarWidth"
     static let popoverOriginX = "popoverOriginX"
     static let popoverOriginY = "popoverOriginY"
+    static let appTheme = "appTheme"
 }
 
 enum PreferencesDefault {
@@ -43,6 +44,7 @@ enum PreferencesDefault {
     static let notePreviewSize = NotePreviewSize.oneLine
     static let lastSessionMode = TimerMode.free
     static let sidebarWidth = 190.0
+    static let appTheme = AppTheme.system
 }
 
 enum TimerMode: String, CaseIterable, Identifiable {
@@ -71,6 +73,22 @@ enum IdleResolutionMode: String, CaseIterable, Identifiable {
         case .ask: "Perguntar"
         case .autoDiscard: "Descartar automaticamente"
         case .notifyOnly: "Apenas notificar"
+        }
+    }
+}
+
+enum AppTheme: String, CaseIterable, Identifiable {
+    case light
+    case dark
+    case system
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .light: "Claro"
+        case .dark: "Escuro"
+        case .system: "Sistema"
         }
     }
 }
@@ -135,6 +153,14 @@ enum Preferences {
             return PreferencesDefault.idleResolutionMode
         }
         return mode
+    }
+
+    static func appTheme() -> AppTheme {
+        guard let raw = UserDefaults.standard.string(forKey: PreferencesKey.appTheme),
+              let theme = AppTheme(rawValue: raw) else {
+            return PreferencesDefault.appTheme
+        }
+        return theme
     }
 
     static func notePreviewSize() -> NotePreviewSize {
