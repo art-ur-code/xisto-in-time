@@ -11,6 +11,7 @@ import SwiftData
 enum SessionKind: String, Codable {
     case work
     case `break`
+    case plan
 }
 
 @Model
