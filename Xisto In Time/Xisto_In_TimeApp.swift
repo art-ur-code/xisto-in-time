@@ -24,6 +24,7 @@ struct Xisto_In_TimeApp: App {
     @State private var pomodoro: PomodoroController
 
     init() {
+        Theme.syncAppAppearance()
         let schema = Schema([Session.self, TaskItem.self, Project.self])
         StoreMaintenance.migrateLegacyStoreIfNeeded()
         let storeURL = StoreMaintenance.appDirectory().appending(path: "default.store")

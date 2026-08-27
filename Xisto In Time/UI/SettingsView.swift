@@ -53,9 +53,23 @@ private struct GeneralSettingsPane: View {
     private var openWindowOnLaunch = PreferencesDefault.openWindowOnLaunch
     @AppStorage(PreferencesKey.notePreviewSize)
     private var notePreviewSize = PreferencesDefault.notePreviewSize
+    @AppStorage(PreferencesKey.appTheme)
+    private var appTheme = PreferencesDefault.appTheme
 
     var body: some View {
         Form {
+            Section("Aparência") {
+                Picker("Tema", selection: $appTheme) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Text(theme.label).tag(theme)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: appTheme) {
+                    Theme.syncAppAppearance()
+                }
+            }
+
             Section {
                 Toggle("Abrir a janela principal ao iniciar", isOn: $openWindowOnLaunch)
             }
