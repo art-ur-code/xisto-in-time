@@ -117,7 +117,7 @@ struct TaskPickerView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.accentColor)
         }
-        .padding(12)
+        .padding(Theme.Spacing.lg)
         .onExitCommand(perform: onCancel)
     }
 
@@ -189,7 +189,7 @@ struct TaskPickerView: View {
                     .foregroundStyle(Color.accentColor)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Theme.Spacing.xs)
         .frame(minHeight: 28)
         .contentShape(Rectangle())
         .listRowBackground(isHighlighted(row) ? Color.accentColor.opacity(0.12) : Color.clear)
@@ -233,7 +233,7 @@ struct TaskPickerView: View {
             }
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Theme.Spacing.xs)
         .frame(minHeight: 28)
         .contentShape(Rectangle())
         .listRowBackground(isHighlighted(row) ? Color.accentColor.opacity(0.12) : Color.clear)

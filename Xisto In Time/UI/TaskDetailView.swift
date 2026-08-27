@@ -69,7 +69,7 @@ struct TaskDetailView: View {
             }
 
             Section {
-                HStack(spacing: 12) {
+                HStack(spacing: Theme.Spacing.lg) {
                     statCard(title: "Hoje", total: todayTotal)
                     statCard(title: "Esta semana", total: weekTotal)
                 }

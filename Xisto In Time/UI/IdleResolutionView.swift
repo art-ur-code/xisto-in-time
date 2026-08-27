@@ -40,7 +40,7 @@ struct IdleResolutionView: View {
         .padding(28)
         .frame(width: 380, height: 260)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.xl))
-        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.separator))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.xl).strokeBorder(.separator))
         .onExitCommand(perform: onKeep)
     }
 }

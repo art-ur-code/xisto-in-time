@@ -19,7 +19,7 @@ struct SessionDayHeader: View {
     private static let monthAbbreviations = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.base) {
             Text(Self.dayTitle(for: group.day))
                 .font(.system(size: Theme.Font.footnote, weight: .bold))
                 .foregroundStyle(.primary)

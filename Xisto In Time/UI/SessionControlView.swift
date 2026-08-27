@@ -211,7 +211,7 @@ struct SessionControlView: View {
     /// joins the segments into one piece (round only at the outer ends,
     /// straight where they meet).
     private var modeSelector: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Theme.Spacing.md) {
             ForEach(TimerMode.allCases) { m in
                 Button {
                     mode = m
@@ -225,7 +225,7 @@ struct SessionControlView: View {
                 .buttonStyle(.plain)
                 .background(
                     RoundedRectangle(cornerRadius: Theme.Radius.lg, style: .continuous)
-                        .fill(m == mode ? accentColor : Theme.Color.textFaint.opacity(0.18))
+                        .fill(m == mode ? accentColor : Color.gray.opacity(0.18))
                 )
                 .foregroundStyle(m == mode ? .white : .primary)
             }
@@ -356,7 +356,7 @@ struct SessionControlView: View {
             .padding(.vertical, 6)
         }
         .padding(.horizontal, 10)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
     }
 
     /// The value shown when not actively editing: the running countdown/count-up while a

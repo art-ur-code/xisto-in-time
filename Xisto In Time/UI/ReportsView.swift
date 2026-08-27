@@ -48,7 +48,7 @@ struct ReportsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                 Picker("Vista", selection: $mode) {
                     ForEach(ReportMode.allCases) { m in
                         Text(m.rawValue).tag(m)
@@ -121,7 +121,7 @@ struct ReportsView: View {
     private var dailySection: some View {
         let report = ReportBuilder.dailyReport(sessions: filteredSessions, day: referenceDate)
 
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
             dayNavigator
 
             totalCard("Total: \(ReportBuilder.formatHoursMinutes(report.total)) (\(ReportBuilder.formatDecimalHours(report.total)))")
@@ -208,7 +208,7 @@ struct ReportsView: View {
         let days = weekDays(containing: referenceDate)
         let report = ReportBuilder.weeklyReport(sessions: filteredSessions, days: days)
 
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
             weekNavigator(days: days)
 
             totalCard("Total da semana: \(ReportBuilder.formatHoursMinutes(report.grandTotal)) (\(ReportBuilder.formatDecimalHours(report.grandTotal)))")

@@ -36,7 +36,7 @@ struct PopoverView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: Theme.Spacing.sm) {
             Button(action: onOpenMainWindow) {
                 Text("Hoje \(ReportBuilder.formatHoursMinutes(todayTotal))")
                     .font(.headline)

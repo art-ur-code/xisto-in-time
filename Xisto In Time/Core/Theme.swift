@@ -45,14 +45,15 @@ enum Theme {
         static var textFaint: SwiftUI.Color { dynamic(light: "C4C4C9", dark: "48484A") }
         static var inkStrong: SwiftUI.Color { dynamic(light: "2A2A2F", dark: "F0F0F2") }
 
-        /// Active/selected filter-chip fill and its matching text — kept as
-        /// their own pair (rather than reusing `inkStrong` for the
-        /// background and `surfacePrimary`/white for the text separately)
-        /// because `inkStrong` intentionally *flips* in dark mode (near-
-        /// black → near-white); a text color picked to contrast in light
-        /// mode would stop contrasting the moment the background flips.
+        /// Active/selected filter-chip fill and its matching text.
+        /// `chipActiveBackground` is `inkStrong`, which flips near-black
+        /// (light mode) to near-white (dark mode). Its text needs to be
+        /// the exact opposite in both modes — which is exactly what
+        /// `surfacePrimary` (the page's own background color) already is,
+        /// so `chipActiveText` references it directly instead of
+        /// duplicating its hex values.
         static var chipActiveBackground: SwiftUI.Color { inkStrong }
-        static var chipActiveText: SwiftUI.Color { dynamic(light: "FFFFFF", dark: "1C1C1E") }
+        static var chipActiveText: SwiftUI.Color { surfacePrimary }
 
         // MARK: "Hoje" badge
 

@@ -39,7 +39,7 @@ struct PomodoroDecisionView: View {
         .padding(32)
         .frame(width: 380, height: 260)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.xl))
-        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.separator))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.xl).strokeBorder(.separator))
         .onExitCommand(perform: onSnooze)
     }
 }
@@ -69,11 +69,11 @@ private struct DecisionButtonBody: View {
             .padding(.vertical, Theme.Spacing.md)
             .frame(minWidth: 120)
             .background(
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: Theme.Radius.md)
                     .fill(fillColor)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: Theme.Radius.md)
                     .strokeBorder(prominent ? .clear : tint.opacity(isHovered ? 0.55 : 0.3))
             )
             .scaleEffect(configuration.isPressed ? 0.96 : 1)

@@ -13,6 +13,10 @@ funcionalidades, e patch para correcções de bugs.
 
 - Sistema de design (Theme): cores, tipografia, espaçamento e raio de canto centralizados app-wide, estabelecendo a base para tema escuro automático futuro.
 
+### Corrigido
+
+- A cápsula de cor do tipo "Plano" nas linhas de sessão do Projecto/Tarefa (detalhe) usava uma cor âmbar antiga, anterior à unificação — passa a usar a mesma cor de "Plano" do resto da app.
+
 ## [1.22.1] - 2026-08-27
 
 ### Corrigido

@@ -202,7 +202,7 @@ struct AllSessionsView: View {
 
             let worked = metricTotal(for: .work)
             let planned = metricTotal(for: .plan)
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: Theme.Spacing.xxs) {
                 Text(scope == .today ? "Registado hoje vs. planeado" : "Registado esta semana")
                     .font(.system(size: Theme.Font.caption))
                     .foregroundStyle(Theme.Color.textMuted)
