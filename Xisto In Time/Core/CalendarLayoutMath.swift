@@ -35,16 +35,18 @@ enum CalendarLayoutMath {
     }
 
     /// Vertical position of `date` within its day's column, `hourHeight` points per hour.
-    static func yOffset(for date: Date, day: Date, hourHeight: CGFloat, calendar: Calendar = .current) -> CGFloat {
+    /// `startHour` shifts the grid's origin — 0 for a full 00:00–24:00 day (the
+    /// default), or the configured start hour when only a 12h window is shown.
+    static func yOffset(for date: Date, day: Date, hourHeight: CGFloat, startHour: Int = 0, calendar: Calendar = .current) -> CGFloat {
         let dayStart = calendar.startOfDay(for: day)
-        let hours = date.timeIntervalSince(dayStart) / 3600
+        let hours = date.timeIntervalSince(dayStart) / 3600 - Double(startHour)
         return CGFloat(hours) * hourHeight
     }
 
     /// Inverse of `yOffset` — the `Date` a vertical drag position maps to within `day`.
-    static func date(forYOffset y: CGFloat, day: Date, hourHeight: CGFloat, calendar: Calendar = .current) -> Date {
+    static func date(forYOffset y: CGFloat, day: Date, hourHeight: CGFloat, startHour: Int = 0, calendar: Calendar = .current) -> Date {
         let dayStart = calendar.startOfDay(for: day)
-        let hours = Double(y / hourHeight)
+        let hours = Double(y / hourHeight) + Double(startHour)
         return dayStart.addingTimeInterval(hours * 3600)
     }
 

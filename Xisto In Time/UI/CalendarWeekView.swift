@@ -44,6 +44,10 @@ struct CalendarWeekView: View {
     private var showWeekend = PreferencesDefault.reportsShowWeekend
     @AppStorage(PreferencesKey.calendarSnapMinutes)
     private var snapMinutes = PreferencesDefault.calendarSnapMinutes
+    @AppStorage(PreferencesKey.calendarUse24Hour)
+    private var use24Hour = PreferencesDefault.calendarUse24Hour
+    @AppStorage(PreferencesKey.calendarStartHour)
+    private var startHour = PreferencesDefault.calendarStartHour
 
     @State private var referenceDate = Date()
     @State private var runningTick = Date()
@@ -63,6 +67,18 @@ struct CalendarWeekView: View {
 
     private var days: [Date] {
         ReportBuilder.weekDays(containing: referenceDate, showWeekend: showWeekend)
+    }
+
+    /// The hours actually drawn in the grid — the full day, or a 12h window
+    /// starting at `gridStartHour` when `use24Hour` is off.
+    private var visibleHours: [Int] {
+        use24Hour ? Array(0..<24) : Array(gridStartHour..<(gridStartHour + 12))
+    }
+
+    /// `startHour` is only meaningful (and only shown in Settings) in 12h
+    /// mode — the 24h grid always starts at midnight.
+    private var gridStartHour: Int {
+        use24Hour ? 0 : startHour
     }
 
     private var visibleSessions: [Session] {
@@ -164,6 +180,9 @@ struct CalendarWeekView: View {
     /// horizontal `ScrollView` and isn't a safe `scrollTo` target.
     private func scrollToNow(proxy: ScrollViewProxy) {
         let hour = Calendar.current.component(.hour, from: Date())
+        // If the current hour isn't in the visible window (12h mode), this
+        // id simply doesn't exist and scrollTo silently no-ops — expected,
+        // there's nothing to scroll to outside the configured range.
         proxy.scrollTo(hour, anchor: .top)
     }
 
@@ -188,7 +207,7 @@ struct CalendarWeekView: View {
 
     private var timeGutter: some View {
         VStack(spacing: 0) {
-            ForEach(0..<24, id: \.self) { hour in
+            ForEach(visibleHours, id: \.self) { hour in
                 Text(String(format: "%02d:00", hour))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -205,12 +224,13 @@ struct CalendarWeekView: View {
     }
 
     private func dayColumn(for day: Date) -> some View {
-        ZStack(alignment: .topLeading) {
+        let columnHeight = hourHeight * CGFloat(visibleHours.count)
+        return ZStack(alignment: .topLeading) {
             // Sits behind the grid lines and session blocks, so a block's own
             // gestures/double-click win when the click actually lands on it —
             // this only fires on genuinely empty space.
             Color.clear
-                .frame(width: dayColumnWidth, height: hourHeight * 24)
+                .frame(width: dayColumnWidth, height: columnHeight)
                 .contentShape(Rectangle())
                 .gesture(createSessionGesture(for: day))
             hourGridLines
@@ -221,6 +241,7 @@ struct CalendarWeekView: View {
                     hourHeight: hourHeight,
                     columnWidth: dayColumnWidth,
                     snapMinutes: snapMinutes,
+                    startHour: gridStartHour,
                     days: days,
                     overlapCheck: { start, end, excluding in
                         SessionStore.overlappingSession(startedAt: start, endedAt: end, excluding: excluding, kind: segment.session.kind, in: allSessions)
@@ -241,18 +262,20 @@ struct CalendarWeekView: View {
                     taskTitle: timerEngine.currentTask?.title,
                     projectColor: timerEngine.currentTask?.project?.color,
                     now: runningTick,
-                    hourHeight: hourHeight
+                    hourHeight: hourHeight,
+                    startHour: gridStartHour
                 )
             }
             if Calendar.current.isDateInToday(day) {
                 Rectangle()
                     .fill(Color.red)
                     .frame(height: 1.5)
-                    .offset(y: CalendarLayoutMath.yOffset(for: runningTick, day: day, hourHeight: hourHeight))
+                    .offset(y: CalendarLayoutMath.yOffset(for: runningTick, day: day, hourHeight: hourHeight, startHour: gridStartHour))
                     .allowsHitTesting(false)
             }
         }
-        .frame(width: dayColumnWidth, height: hourHeight * 24)
+        .frame(width: dayColumnWidth, height: columnHeight)
+        .clipped()
         .background(Color.primary.opacity(0.02))
     }
 
@@ -282,7 +305,7 @@ struct CalendarWeekView: View {
         let isTap = abs(value.translation.width) < 4 && abs(value.translation.height) < 4
 
         let startY = min(value.startLocation.y, value.location.y)
-        let rawStart = CalendarLayoutMath.date(forYOffset: startY, day: day, hourHeight: hourHeight)
+        let rawStart = CalendarLayoutMath.date(forYOffset: startY, day: day, hourHeight: hourHeight, startHour: gridStartHour)
         let snappedStart = CalendarLayoutMath.snap(rawStart, toMinutes: snapMinutes, calendar: calendar)
 
         let end: Date
@@ -290,7 +313,7 @@ struct CalendarWeekView: View {
             end = snappedStart.addingTimeInterval(30 * 60)
         } else {
             let endY = max(value.startLocation.y, value.location.y)
-            let rawEnd = CalendarLayoutMath.date(forYOffset: endY, day: day, hourHeight: hourHeight)
+            let rawEnd = CalendarLayoutMath.date(forYOffset: endY, day: day, hourHeight: hourHeight, startHour: gridStartHour)
             let snappedEnd = CalendarLayoutMath.snap(rawEnd, toMinutes: snapMinutes, calendar: calendar)
             let minimumEnd = snappedStart.addingTimeInterval(TimeInterval(max(snapMinutes, 1) * 60))
             end = max(snappedEnd, minimumEnd)
@@ -303,8 +326,8 @@ struct CalendarWeekView: View {
     private func creationGhost(for day: Date) -> some View {
         Group {
             if let creationDrag, Calendar.current.isDate(creationDrag.day, inSameDayAs: day) {
-                let y = CalendarLayoutMath.yOffset(for: creationDrag.start, day: day, hourHeight: hourHeight)
-                let height = max(4, CalendarLayoutMath.yOffset(for: creationDrag.end, day: day, hourHeight: hourHeight) - y)
+                let y = CalendarLayoutMath.yOffset(for: creationDrag.start, day: day, hourHeight: hourHeight, startHour: gridStartHour)
+                let height = max(4, CalendarLayoutMath.yOffset(for: creationDrag.end, day: day, hourHeight: hourHeight, startHour: gridStartHour) - y)
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.accentColor.opacity(0.25))
                     .overlay(
@@ -325,7 +348,7 @@ struct CalendarWeekView: View {
 
     private var hourGridLines: some View {
         VStack(spacing: 0) {
-            ForEach(0..<24, id: \.self) { _ in
+            ForEach(visibleHours, id: \.self) { _ in
                 Rectangle()
                     .fill(Color.secondary.opacity(0.15))
                     .frame(height: 1)

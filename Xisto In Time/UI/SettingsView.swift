@@ -173,16 +173,39 @@ private struct ReportsSettingsPane: View {
 private struct CalendarSettingsPane: View {
     @AppStorage(PreferencesKey.calendarSnapMinutes)
     private var calendarSnapMinutes = PreferencesDefault.calendarSnapMinutes
+    @AppStorage(PreferencesKey.calendarUse24Hour)
+    private var use24Hour = PreferencesDefault.calendarUse24Hour
+    @AppStorage(PreferencesKey.calendarStartHour)
+    private var startHour = PreferencesDefault.calendarStartHour
 
-    private let options = [5, 15, 30]
+    private let snapOptions = [5, 15, 30]
 
     var body: some View {
         Form {
             Section {
                 Picker("Encaixar (snap) ao arrastar", selection: $calendarSnapMinutes) {
-                    ForEach(options, id: \.self) { minutes in
+                    ForEach(snapOptions, id: \.self) { minutes in
                         Text("\(minutes) min").tag(minutes)
                     }
+                }
+            }
+
+            Section("Intervalo de horas") {
+                Picker("Mostrar", selection: $use24Hour) {
+                    Text("12 horas").tag(false)
+                    Text("24 horas").tag(true)
+                }
+                .pickerStyle(.segmented)
+
+                if !use24Hour {
+                    Picker("Início", selection: $startHour) {
+                        ForEach(0...12, id: \.self) { hour in
+                            Text(String(format: "%02d:00", hour)).tag(hour)
+                        }
+                    }
+                    Text("Mostra das \(String(format: "%02d:00", startHour)) às \(String(format: "%02d:00", startHour + 12))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }

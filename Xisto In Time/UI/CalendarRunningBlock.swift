@@ -16,13 +16,14 @@ struct CalendarRunningBlock: View {
     let projectColor: Color?
     let now: Date
     let hourHeight: CGFloat
+    let startHour: Int
 
     private var y: CGFloat {
-        CalendarLayoutMath.yOffset(for: startedAt, day: day, hourHeight: hourHeight)
+        CalendarLayoutMath.yOffset(for: startedAt, day: day, hourHeight: hourHeight, startHour: startHour)
     }
 
     private var height: CGFloat {
-        max(4, CalendarLayoutMath.yOffset(for: now, day: day, hourHeight: hourHeight) - y)
+        max(4, CalendarLayoutMath.yOffset(for: now, day: day, hourHeight: hourHeight, startHour: startHour) - y)
     }
 
     /// Mirrors `CalendarSessionBlock.fillColor`'s `.break` special-case so a

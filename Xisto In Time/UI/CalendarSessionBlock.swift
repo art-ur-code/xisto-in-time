@@ -11,6 +11,7 @@ struct CalendarSessionBlock: View {
     let hourHeight: CGFloat
     let columnWidth: CGFloat
     let snapMinutes: Int
+    let startHour: Int
     let days: [Date]
     let overlapCheck: (Date, Date, PersistentIdentifier?) -> Session?
     let onCommit: (Session, Date, Date) -> Void
@@ -31,11 +32,11 @@ struct CalendarSessionBlock: View {
     private var canMoveAcrossDays: Bool { segment.isSessionStart && segment.isSessionEnd }
 
     private var baseY: CGFloat {
-        CalendarLayoutMath.yOffset(for: segment.segmentStart, day: segment.day, hourHeight: hourHeight)
+        CalendarLayoutMath.yOffset(for: segment.segmentStart, day: segment.day, hourHeight: hourHeight, startHour: startHour)
     }
 
     private var baseHeight: CGFloat {
-        max(4, CalendarLayoutMath.yOffset(for: segment.segmentEnd, day: segment.day, hourHeight: hourHeight) - baseY)
+        max(4, CalendarLayoutMath.yOffset(for: segment.segmentEnd, day: segment.day, hourHeight: hourHeight, startHour: startHour) - baseY)
     }
 
     private var laneWidth: CGFloat {
