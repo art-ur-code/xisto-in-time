@@ -47,8 +47,11 @@ struct CalendarSessionBlock: View {
     }
 
     private var fillColor: Color {
-        if segment.session.kind == .break { return Color.gray.opacity(0.35) }
-        return (segment.session.task?.project?.color ?? .secondary).opacity(0.55)
+        switch segment.session.kind {
+        case .break: return Color.gray.opacity(0.35)
+        case .plan: return Color(hex: "FAE588").opacity(0.85)
+        case .work: return (segment.session.task?.project?.color ?? .secondary).opacity(0.55)
+        }
     }
 
     private var borderColor: Color {
@@ -57,7 +60,11 @@ struct CalendarSessionBlock: View {
 
     private var title: String {
         if let taskTitle = segment.session.task?.title { return taskTitle }
-        return segment.session.kind == .break ? "Pausa" : "Sem atribuição"
+        switch segment.session.kind {
+        case .break: return "Pausa"
+        case .plan: return "Plano"
+        case .work: return "Sem atribuição"
+        }
     }
 
     var body: some View {
@@ -212,7 +219,7 @@ struct CalendarSessionBlock: View {
             resetTranslation()
             return
         }
-        guard newEnd <= Date() else {
+        if segment.session.kind != .plan, newEnd > Date() {
             showingFutureAlert = true
             return
         }
