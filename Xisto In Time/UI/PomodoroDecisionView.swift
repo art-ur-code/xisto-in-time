@@ -16,7 +16,7 @@ struct PomodoroDecisionView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: phase == .work ? "cup.and.saucer.fill" : "figure.mind.and.body")
-                .font(.system(size: 34))
+                .font(.system(size: Theme.Font.largeTitle))
                 .foregroundStyle(phase == .work ? .orange : .green)
 
             Text(phase == .work ? "Sessão de trabalho concluída" : "Pausa concluída")
@@ -38,7 +38,7 @@ struct PomodoroDecisionView: View {
         }
         .padding(32)
         .frame(width: 380, height: 260)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.xl))
         .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.separator))
         .onExitCommand(perform: onSnooze)
     }
@@ -65,8 +65,8 @@ private struct DecisionButtonBody: View {
         configuration.label
             .font(.body.weight(prominent ? .semibold : .medium))
             .foregroundStyle(prominent ? Color.white : tint)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Theme.Spacing.xl)
+            .padding(.vertical, Theme.Spacing.md)
             .frame(minWidth: 120)
             .background(
                 RoundedRectangle(cornerRadius: 8)

@@ -23,7 +23,7 @@ struct PopoverView: View {
             header
             SessionControlView()
         }
-        .padding(16)
+        .padding(Theme.Spacing.xl)
         .frame(width: 360)
         // Hard height cap so the hosting panel never has to guess at an
         // unbounded size while the content resizes (mode legend, Pomodoro
@@ -32,7 +32,7 @@ struct PopoverView: View {
         // The panel itself is a plain borderless NSPanel (see
         // MenuBarController) — no more NSPopover chrome, so the rounded
         // material background lives here instead.
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
     }
 
     private var header: some View {

@@ -123,8 +123,8 @@ struct MainWindowView: View {
                 }
 
                 SessionControlView(compact: true)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.vertical, Theme.Spacing.base)
 
                 Divider()
 
@@ -134,8 +134,8 @@ struct MainWindowView: View {
                         Text("Preferências")
                         Spacer()
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.vertical, Theme.Spacing.md)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -149,8 +149,8 @@ struct MainWindowView: View {
                         Text("Sair")
                         Spacer()
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.vertical, Theme.Spacing.md)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

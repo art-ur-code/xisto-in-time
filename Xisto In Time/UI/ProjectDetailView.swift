@@ -59,8 +59,8 @@ struct ProjectDetailView: View {
                     statCard(title: "Esta semana", total: weekTotal)
                 }
                 .listRowInsets(EdgeInsets())
-                .padding(.vertical, 6)
-                .padding(.horizontal, 4)
+                .padding(.vertical, Theme.Spacing.sm)
+                .padding(.horizontal, Theme.Spacing.xs)
             }
 
             Section {
@@ -161,7 +161,7 @@ struct ProjectDetailView: View {
                 .foregroundStyle(.secondary)
         }
         .textCase(nil)
-        .padding(.vertical, 4)
+        .padding(.vertical, Theme.Spacing.xs)
     }
 
     private func statCard(title: String, total: TimeInterval) -> some View {
@@ -174,7 +174,7 @@ struct ProjectDetailView: View {
                 .monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(Theme.Spacing.lg)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
     }
 }

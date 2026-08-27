@@ -110,8 +110,8 @@ struct TaskPickerView: View {
                     .onKeyPress(.upArrow) { moveHighlight(by: -1); return .handled }
                     .onKeyPress(.return) { activateHighlighted(); return .handled }
             }
-            .padding(8)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
+            .padding(Theme.Spacing.md)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.md))
 
             Button("Cancelar", action: onCancel)
                 .buttonStyle(.plain)
@@ -175,7 +175,7 @@ struct TaskPickerView: View {
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: Theme.Font.callout, weight: .semibold))
                     .lineLimit(2)
                 if let project = task.project {
                     Text("\(project.name) · \(ReportBuilder.formatHoursMinutes(todayTotal(for: task)))")
@@ -223,7 +223,7 @@ struct TaskPickerView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 highlightedTitle(task.title, query: query)
-                    .font(.system(size: 15))
+                    .font(.system(size: Theme.Font.callout))
                     .lineLimit(2)
                 if let project = task.project {
                     Text(project.name)

@@ -107,7 +107,7 @@ struct ReportsView: View {
         Text(text)
             .font(.headline)
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.vertical, Theme.Spacing.md)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
     }
 

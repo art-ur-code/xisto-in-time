@@ -16,7 +16,7 @@ struct IdleResolutionView: View {
     var body: some View {
         VStack(spacing: 14) {
             Image(systemName: "moon.zzz.fill")
-                .font(.system(size: 30))
+                .font(.system(size: Theme.Font.title2))
                 .foregroundStyle(.blue)
 
             Text("Sem actividade desde as \(idleStartedAt.formatted(date: .omitted, time: .shortened))")
@@ -39,7 +39,7 @@ struct IdleResolutionView: View {
         }
         .padding(28)
         .frame(width: 380, height: 260)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.xl))
         .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.separator))
         .onExitCommand(perform: onKeep)
     }

@@ -95,7 +95,7 @@ struct ProjectsView: View {
             RowDisclosureChevron()
         }
         .padding(14)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
         .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
         .listRowSeparator(.hidden)
         .openOnDoubleClick {

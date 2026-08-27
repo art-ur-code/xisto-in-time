@@ -64,8 +64,8 @@ struct TaskDetailView: View {
                 .controlSize(.large)
                 .disabled(isRunningThisTask)
                 .listRowInsets(EdgeInsets())
-                .padding(.vertical, 6)
-                .padding(.horizontal, 4)
+                .padding(.vertical, Theme.Spacing.sm)
+                .padding(.horizontal, Theme.Spacing.xs)
             }
 
             Section {
@@ -74,8 +74,8 @@ struct TaskDetailView: View {
                     statCard(title: "Esta semana", total: weekTotal)
                 }
                 .listRowInsets(EdgeInsets())
-                .padding(.vertical, 6)
-                .padding(.horizontal, 4)
+                .padding(.vertical, Theme.Spacing.sm)
+                .padding(.horizontal, Theme.Spacing.xs)
             }
 
             if sessions.isEmpty {
@@ -152,7 +152,7 @@ struct TaskDetailView: View {
                 .monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(Theme.Spacing.lg)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
     }
 }
