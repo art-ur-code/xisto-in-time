@@ -48,8 +48,8 @@ struct CalendarSessionBlock: View {
 
     private var fillColor: Color {
         switch segment.session.kind {
-        case .break: return Color.gray.opacity(0.35)
-        case .plan: return Color(hex: "FAE588").opacity(0.85)
+        case .break: return SessionKind.break.color.opacity(0.35)
+        case .plan: return SessionKind.plan.color.opacity(0.85)
         case .work: return (segment.session.task?.project?.color ?? .secondary).opacity(0.55)
         }
     }

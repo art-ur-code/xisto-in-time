@@ -29,12 +29,12 @@ struct CalendarRunningBlock: View {
     /// running pause doesn't visibly flip from project/accent color to gray
     /// the instant it's saved as a real session.
     private var strokeColor: Color {
-        kind == .break ? .gray : (projectColor ?? .accentColor)
+        kind == .break ? SessionKind.break.color : (projectColor ?? .accentColor)
     }
 
     var body: some View {
         RoundedRectangle(cornerRadius: 4)
-            .fill(kind == .break ? Color.gray.opacity(0.35) : (projectColor ?? .accentColor).opacity(0.35))
+            .fill(kind == .break ? SessionKind.break.color.opacity(0.35) : (projectColor ?? .accentColor).opacity(0.35))
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
                     .strokeBorder(strokeColor, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))

@@ -13,22 +13,37 @@ import SwiftUI
 /// avoids forms like "segunda-feira" that `EEEE` gives in pt.
 struct SessionDayHeader: View {
     let group: DaySessionGroup
+    var isToday: Bool = false
 
     private static let weekdayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"]
     private static let monthAbbreviations = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
     var body: some View {
-        HStack {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(Self.dayTitle(for: group.day))
-                .font(.subheadline.bold())
+                .font(.system(size: 12.5, weight: .bold))
                 .foregroundStyle(.primary)
-            Spacer()
-            Text("\(group.sessions.count) sessões · \(TimerEngine.format(group.total))")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if isToday {
+                Text("HOJE")
+                    .font(.system(size: 10.5, weight: .bold))
+                    .tracking(0.4)
+                    .foregroundStyle(Color(hex: "B05800"))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(Color(hex: "FFD6D6"), in: RoundedRectangle(cornerRadius: 5))
+            }
+            Rectangle()
+                .fill(Color(hex: "ECECF0"))
+                .frame(height: 1)
+            Text("\(group.sessions.count) \(group.sessions.count == 1 ? "sessão" : "sessões") · \(TimerEngine.format(group.total))")
+                .font(.system(size: 11.5))
+                .foregroundStyle(Color(hex: "9A9AA0"))
+                .monospacedDigit()
         }
         .textCase(nil)
-        .padding(.vertical, 4)
+        .padding(.top, 9)
+        .padding(.bottom, 7)
+        .padding(.horizontal, 2)
     }
 
     private static func dayTitle(for day: Date) -> String {
