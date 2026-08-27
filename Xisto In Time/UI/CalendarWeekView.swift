@@ -54,11 +54,24 @@ struct CalendarWeekView: View {
     @State private var horizontalOffset: CGFloat = 0
     @State private var newSessionRange: NewSessionRange?
     @State private var creationDrag: CreationDragState?
+    @State private var availableWidth: CGFloat = 0
 
     private let hourHeight: CGFloat = 56
-    private let dayColumnWidth: CGFloat = 130
+    private let minColumnWidth: CGFloat = 110
     private let gutterWidth: CGFloat = 44
     private let headerHeight: CGFloat = 22
+    private let columnSpacing: CGFloat = 1
+
+    /// Day columns fill the window's full width — growing past
+    /// `minColumnWidth` on a wide window instead of leaving space unused —
+    /// and only fall back to a fixed `minColumnWidth` (with the existing
+    /// horizontal scroll taking over) once the window gets too narrow for
+    /// every visible day to fit comfortably.
+    private var dayColumnWidth: CGFloat {
+        let count = CGFloat(max(days.count, 1))
+        let available = availableWidth - gutterWidth - columnSpacing * (count - 1)
+        return max(minColumnWidth, available / count)
+    }
 
     /// Hoisted so the 30s refresh interval isn't restarted on every `body`
     /// re-evaluation — `Timer.publish(...).autoconnect()` inline would create
@@ -94,46 +107,52 @@ struct CalendarWeekView: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            VStack(alignment: .leading, spacing: 12) {
-                weekNavigator(proxy: proxy)
-                fixedHeaderRow
+        GeometryReader { outerGeo in
+            ScrollViewReader { proxy in
+                VStack(alignment: .leading, spacing: 12) {
+                    weekNavigator(proxy: proxy)
+                    fixedHeaderRow
 
-                // Two separate single-axis ScrollViews (nested), not one
-                // combined `ScrollView([.vertical, .horizontal])` — on macOS,
-                // `ScrollViewReader.scrollTo` does not reliably scroll a
-                // two-axis ScrollView (confirmed empirically: chevron/button
-                // taps register fine, but programmatic scrollTo silently
-                // no-ops on the combined scroll view regardless of anchor).
-                // Vertical scroll wraps everything (so `scrollTo` targets
-                // the hour gutter reliably); horizontal scroll is nested and
-                // only covers the day columns, tracked via `horizontalOffset`
-                // so `fixedHeaderRow` stays in sync.
-                ScrollView(.vertical) {
-                    HStack(alignment: .top, spacing: 0) {
-                        timeGutter
-                        ScrollView(.horizontal) {
-                            HStack(alignment: .top, spacing: 1) {
-                                ForEach(days, id: \.self) { day in
-                                    dayColumn(for: day)
+                    // Two separate single-axis ScrollViews (nested), not one
+                    // combined `ScrollView([.vertical, .horizontal])` — on macOS,
+                    // `ScrollViewReader.scrollTo` does not reliably scroll a
+                    // two-axis ScrollView (confirmed empirically: chevron/button
+                    // taps register fine, but programmatic scrollTo silently
+                    // no-ops on the combined scroll view regardless of anchor).
+                    // Vertical scroll wraps everything (so `scrollTo` targets
+                    // the hour gutter reliably); horizontal scroll is nested and
+                    // only covers the day columns, tracked via `horizontalOffset`
+                    // so `fixedHeaderRow` stays in sync.
+                    ScrollView(.vertical) {
+                        HStack(alignment: .top, spacing: 0) {
+                            timeGutter
+                            ScrollView(.horizontal) {
+                                HStack(alignment: .top, spacing: columnSpacing) {
+                                    ForEach(days, id: \.self) { day in
+                                        dayColumn(for: day)
+                                    }
                                 }
+                                .background(
+                                    GeometryReader { geo in
+                                        Color.clear.preference(
+                                            key: CalendarScrollOffsetKey.self,
+                                            value: geo.frame(in: .named("calendarHorizontalScroll")).minX
+                                        )
+                                    }
+                                )
                             }
-                            .background(
-                                GeometryReader { geo in
-                                    Color.clear.preference(
-                                        key: CalendarScrollOffsetKey.self,
-                                        value: geo.frame(in: .named("calendarHorizontalScroll")).minX
-                                    )
-                                }
-                            )
+                            .coordinateSpace(name: "calendarHorizontalScroll")
+                            .onPreferenceChange(CalendarScrollOffsetKey.self) { horizontalOffset = $0 }
                         }
-                        .coordinateSpace(name: "calendarHorizontalScroll")
-                        .onPreferenceChange(CalendarScrollOffsetKey.self) { horizontalOffset = $0 }
                     }
                 }
-            }
-            .onAppear {
-                scrollToNow(proxy: proxy)
+                .onAppear {
+                    availableWidth = outerGeo.size.width
+                    scrollToNow(proxy: proxy)
+                }
+                .onChange(of: outerGeo.size.width) { _, newValue in
+                    availableWidth = newValue
+                }
             }
         }
         .padding()
@@ -193,7 +212,7 @@ struct CalendarWeekView: View {
     private var fixedHeaderRow: some View {
         HStack(spacing: 0) {
             Color.clear.frame(width: gutterWidth)
-            HStack(alignment: .top, spacing: 1) {
+            HStack(alignment: .top, spacing: columnSpacing) {
                 ForEach(days, id: \.self) { day in
                     dayHeader(for: day)
                         .frame(width: dayColumnWidth)
