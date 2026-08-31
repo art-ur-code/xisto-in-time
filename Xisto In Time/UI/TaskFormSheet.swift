@@ -56,8 +56,14 @@ struct TaskFormSheet: View {
                     Button("Cancelar", action: onCancel)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar", action: onSave)
-                        .disabled(taskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || project == nil)
+                    Button("Guardar") {
+                        if let parsed = Self.splitMarkdownLink(taskTitle) {
+                            taskTitle = parsed.title
+                            link = parsed.url
+                        }
+                        onSave()
+                    }
+                    .disabled(taskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || project == nil)
                 }
             }
         }
@@ -75,6 +81,20 @@ struct TaskFormSheet: View {
                 showingNewProjectSheet = false
             }
         }
+    }
+
+    /// Splits a title pasted as a Markdown link (`[title](url)`) into its
+    /// parts, so pasting a link straight into "Título" fills both fields.
+    static func splitMarkdownLink(_ text: String) -> (title: String, url: String)? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("["), trimmed.hasSuffix(")") else { return nil }
+        guard let separatorRange = trimmed.range(of: "](", options: .backwards) else { return nil }
+        let titlePart = trimmed[trimmed.index(after: trimmed.startIndex)..<separatorRange.lowerBound]
+        let urlPart = trimmed[separatorRange.upperBound..<trimmed.index(before: trimmed.endIndex)]
+        let trimmedTitle = titlePart.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedURL = urlPart.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty, let url = URL(string: trimmedURL), url.scheme != nil else { return nil }
+        return (trimmedTitle, trimmedURL)
     }
 
     private func projectLabel(_ project: Project) -> some View {
