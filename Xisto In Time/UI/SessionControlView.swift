@@ -18,7 +18,6 @@ struct SessionControlView: View {
     @Query(sort: \Session.startedAt, order: .reverse)
     private var sessions: [Session]
 
-    @State private var selectedProject: Project?
     @State private var selectedTask: TaskItem?
     @State private var showingPicker = false
     @AppStorage(PreferencesKey.lastSessionMode) private var mode = PreferencesDefault.lastSessionMode
@@ -38,7 +37,16 @@ struct SessionControlView: View {
     }
 
     private var accentColor: Color {
-        selectedProject?.color ?? .accentColor
+        activeTask?.project?.color ?? .accentColor
+    }
+
+    /// The task to display for the current/upcoming session. While running, this must come
+    /// from the shared `TimerEngine` — not the local `selectedTask` — because the session may
+    /// have been started from a different `SessionControlView` instance (popover vs. main
+    /// window sidebar) or from elsewhere entirely (`TaskDetailView`, `SessionRow`), none of
+    /// which touch this view's local selection state.
+    private var activeTask: TaskItem? {
+        timerEngine.isRunning ? timerEngine.currentTask : selectedTask
     }
 
     var body: some View {
@@ -48,7 +56,6 @@ struct SessionControlView: View {
                     currentTask: selectedTask,
                     onSelect: { task in
                         selectedTask = task
-                        selectedProject = task.project
                         withAnimation(.easeInOut(duration: 0.25)) { showingPicker = false }
                     },
                     onCancel: {
@@ -395,15 +402,15 @@ struct SessionControlView: View {
     private var contextCell: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                if let selectedTask {
+                if let activeTask {
                     Text("A REGISTAR EM")
                         .font(.system(size: Theme.Font.caption, weight: .semibold))
                         .tracking(0.6)
                         .foregroundStyle(.secondary)
-                    Text(selectedTask.title)
+                    Text(activeTask.title)
                         .font(.system(size: Theme.Font.callout, weight: .semibold))
                         .lineLimit(2)
-                    if let project = selectedTask.project {
+                    if let project = activeTask.project {
                         Text(project.name)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -445,7 +452,6 @@ struct SessionControlView: View {
                 Spacer()
                 Button("Retomar") {
                     selectedTask = lastTask
-                    selectedProject = lastTask.project
                     startCurrentPhase()
                 }
                 .buttonStyle(.plain)
