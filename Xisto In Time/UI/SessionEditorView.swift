@@ -34,8 +34,18 @@ struct SessionEditorView: View {
     @State private var showingLongDurationAlert = false
     @State private var showingDeleteConfirmation = false
 
-    init(session: Session? = nil, initialStart: Date? = nil, initialEnd: Date? = nil) {
+    private let path: Binding<NavigationPath>
+    private let selection: Binding<MainWindowSection?>
+    /// Closes the sheet this editor is presented in, when it is presented in
+    /// a sheet — pushed presentations (editing an existing session) leave
+    /// this nil and stay on the back stack instead.
+    private let onNavigateAway: (() -> Void)?
+
+    init(session: Session? = nil, initialStart: Date? = nil, initialEnd: Date? = nil, path: Binding<NavigationPath>, selection: Binding<MainWindowSection?>, onNavigateAway: (() -> Void)? = nil) {
         self.existingSession = session
+        self.path = path
+        self.selection = selection
+        self.onNavigateAway = onNavigateAway
         let now = Date()
         _startedAt = State(initialValue: session?.startedAt ?? initialStart ?? now.addingTimeInterval(-3600))
         _endedAt = State(initialValue: session?.endedAt ?? initialEnd ?? now)
@@ -68,21 +78,53 @@ struct SessionEditorView: View {
             }
 
             Section("Atribuição") {
-                Picker("Projecto", selection: $selectedProject) {
-                    Text("Nenhum").tag(Project?.none)
-                    ForEach(projects) { project in
-                        projectLabel(project).tag(Project?.some(project))
+                HStack {
+                    Picker("Projecto", selection: $selectedProject) {
+                        Text("Nenhum").tag(Project?.none)
+                        ForEach(projects) { project in
+                            projectLabel(project).tag(Project?.some(project))
+                        }
                     }
-                }
-                .onChange(of: selectedProject) { selectedTask = nil }
+                    .onChange(of: selectedProject) { selectedTask = nil }
 
-                Picker("Tarefa", selection: $selectedTask) {
-                    Text("Nenhuma").tag(TaskItem?.none)
-                    ForEach(tasksForSelectedProject) { task in
-                        Text(task.title).tag(TaskItem?.some(task))
+                    if let selectedProject {
+                        Button {
+                            openProject(selectedProject)
+                        } label: {
+                            Image(systemName: "arrow.up.forward.circle")
+                        }
+                        .buttonStyle(.plain)
+                        .help("Abrir projecto")
                     }
                 }
-                .disabled(selectedProject == nil)
+
+                HStack {
+                    Picker("Tarefa", selection: $selectedTask) {
+                        Text("Nenhuma").tag(TaskItem?.none)
+                        ForEach(tasksForSelectedProject) { task in
+                            Text(task.title).tag(TaskItem?.some(task))
+                        }
+                    }
+                    .disabled(selectedProject == nil)
+
+                    if let selectedTask {
+                        Button {
+                            openTask(selectedTask)
+                        } label: {
+                            Image(systemName: "arrow.up.forward.circle")
+                        }
+                        .buttonStyle(.plain)
+                        .help("Abrir tarefa")
+
+                        if let url = selectedTask.linkURL {
+                            Link(destination: url) {
+                                Image(systemName: "link")
+                            }
+                            .buttonStyle(.plain)
+                            .help(selectedTask.link ?? "")
+                        }
+                    }
+                }
             }
 
             Section("Nota (opcional)") {
@@ -197,6 +239,18 @@ struct SessionEditorView: View {
         }
         modelContext.saveAndCheckpoint()
         dismiss()
+    }
+
+    private func openProject(_ project: Project) {
+        selection.wrappedValue = .projects
+        path.wrappedValue.append(ProjectRoute(id: project.persistentModelID))
+        onNavigateAway?()
+    }
+
+    private func openTask(_ task: TaskItem) {
+        selection.wrappedValue = .tasks
+        path.wrappedValue.append(TaskRoute(id: task.persistentModelID))
+        onNavigateAway?()
     }
 
     private func projectLabel(_ project: Project) -> some View {

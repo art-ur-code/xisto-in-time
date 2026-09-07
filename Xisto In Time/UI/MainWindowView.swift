@@ -57,16 +57,20 @@ private struct TaskDetailByIDView: View {
 
 private struct SessionEditorByIDView: View {
     let id: PersistentIdentifier
+    let path: Binding<NavigationPath>
+    let selection: Binding<MainWindowSection?>
     @Query private var sessions: [Session]
 
-    init(id: PersistentIdentifier) {
+    init(id: PersistentIdentifier, path: Binding<NavigationPath>, selection: Binding<MainWindowSection?>) {
         self.id = id
+        self.path = path
+        self.selection = selection
         _sessions = Query(filter: #Predicate<Session> { $0.persistentModelID == id })
     }
 
     var body: some View {
         if let session = sessions.first {
-            SessionEditorView(session: session)
+            SessionEditorView(session: session, path: path, selection: selection)
         } else {
             Text("Sessão não encontrada")
                 .foregroundStyle(.secondary)
@@ -175,7 +179,7 @@ struct MainWindowView: View {
                         TaskDetailByIDView(id: route.id, path: $path)
                     }
                     .navigationDestination(for: SessionRoute.self) { route in
-                        SessionEditorByIDView(id: route.id)
+                        SessionEditorByIDView(id: route.id, path: $path, selection: $selection)
                     }
             }
         }
@@ -186,13 +190,13 @@ struct MainWindowView: View {
     private var detailContent: some View {
         switch selection {
         case .calendar:
-            CalendarWeekView(path: $path)
+            CalendarWeekView(path: $path, selection: $selection)
         case .projects:
             ProjectsView(path: $path)
         case .tasks:
             TasksBrowserView(path: $path)
         case .sessions:
-            AllSessionsView(path: $path)
+            AllSessionsView(path: $path, selection: $selection)
         case .reports:
             ReportsView()
         case .none:

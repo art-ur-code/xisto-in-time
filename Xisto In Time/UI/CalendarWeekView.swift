@@ -35,6 +35,7 @@ private struct CreationDragState {
 
 struct CalendarWeekView: View {
     @Binding var path: NavigationPath
+    @Binding var selection: MainWindowSection?
 
     @Environment(\.modelContext) private var modelContext
     @Environment(TimerEngine.self) private var timerEngine
@@ -162,7 +163,7 @@ struct CalendarWeekView: View {
         }
         .sheet(item: $newSessionRange) { range in
             NavigationStack {
-                SessionEditorView(initialStart: range.start, initialEnd: range.end)
+                SessionEditorView(initialStart: range.start, initialEnd: range.end, path: $path, selection: $selection, onNavigateAway: { newSessionRange = nil })
             }
             .frame(width: 420, height: 520)
         }

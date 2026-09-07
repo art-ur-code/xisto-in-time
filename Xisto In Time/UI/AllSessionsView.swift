@@ -41,6 +41,7 @@ private enum SummaryScope: String, CaseIterable, Identifiable {
 
 struct AllSessionsView: View {
     let path: Binding<NavigationPath>
+    let selection: Binding<MainWindowSection?>
 
     @Query(sort: \Session.startedAt, order: .reverse) private var sessions: [Session]
     @State private var showingNewSessionEditor = false
@@ -133,7 +134,7 @@ struct AllSessionsView: View {
         .navigationTitle("Sessões")
         .sheet(isPresented: $showingNewSessionEditor) {
             NavigationStack {
-                SessionEditorView()
+                SessionEditorView(path: path, selection: selection, onNavigateAway: { showingNewSessionEditor = false })
             }
             .frame(width: 420, height: 520)
         }

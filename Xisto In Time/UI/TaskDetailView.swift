@@ -100,14 +100,22 @@ struct TaskDetailView: View {
         .navigationTitle(task.title)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                if let project = task.project {
-                    Label {
-                        Text(project.name)
-                    } icon: {
-                        Circle().fill(project.color).frame(width: 8, height: 8)
+                HStack(spacing: 8) {
+                    if let project = task.project {
+                        Label {
+                            Text(project.name)
+                        } icon: {
+                            Circle().fill(project.color).frame(width: 8, height: 8)
+                        }
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
                     }
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
+                    if let url = task.linkURL {
+                        Link(destination: url) {
+                            Image(systemName: "link")
+                        }
+                        .help(task.link ?? "")
+                    }
                 }
             }
             ToolbarItem {
