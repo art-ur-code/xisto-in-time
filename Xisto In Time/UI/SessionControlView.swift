@@ -141,6 +141,18 @@ struct SessionControlView: View {
                     .tint(.red)
                     .controlSize(compact ? .regular : .large)
                 }
+
+                if mode == .pomodoro && pomodoro.phase != .work {
+                    Button {
+                        pomodoro.advance()
+                    } label: {
+                        Label("Saltar pausa", systemImage: "forward.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(accentColor)
+                    .controlSize(compact ? .regular : .large)
+                }
             } else {
                 Button {
                     startCurrentPhase()
